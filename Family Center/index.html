@@ -116,7 +116,7 @@
         <!-- Floating Header -->
         <header class="absolute top-0 left-0 w-full px-6 pt-10 pb-4 flex items-center justify-between z-[500] pointer-events-none">
             <div class="flex items-center gap-4 pointer-events-auto">
-                <a href="index.html" class="h-12 w-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.08)] m3-btn text-decoration-none">
+                <a href="../index.html" class="h-12 w-12 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.08)] m3-btn text-decoration-none">
                     <span class="material-symbols-rounded text-gray-800">arrow_back</span>
                 </a>
             </div>
@@ -159,44 +159,11 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../js/storage.js"></script>
     
     <script>
-        // --- 1. Mock Family Data ---
-        const familyData = [
-            {
-                id: 'sarah',
-                name: "Sarah (You)",
-                relation: "Self",
-                lat: 28.6139, 
-                lng: 77.2090,
-                avatar: "https://i.pravatar.cc/150?u=sarah",
-                status: "safe",
-                lastSeen: "Just now",
-                battery: "84%"
-            },
-            {
-                id: 'david',
-                name: "David",
-                relation: "Husband",
-                lat: 28.6250, 
-                lng: 77.2150,
-                avatar: "https://i.pravatar.cc/150?u=david",
-                status: "safe",
-                lastSeen: "2 mins ago",
-                battery: "62%"
-            },
-            {
-                id: 'emma',
-                name: "Emma",
-                relation: "Daughter",
-                lat: 28.5900, 
-                lng: 77.1900,
-                avatar: "https://i.pravatar.cc/150?u=emma",
-                status: "danger",
-                lastSeen: "Offline (45m)",
-                battery: "12%"
-            }
-        ];
+        // --- 1. Family Data ---
+        const familyData = Storage.getFamilyMembers();
 
         // --- 2. Map Initialization ---
         const map = L.map('map', {
