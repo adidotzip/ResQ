@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Command Center Dashboard</title>
+    
+    <!-- Tailwind CSS for M3 Expressive Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Symbols (Rounded) -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Material 3 Expressive Base Customizations */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif; /* A more expressive, geometric sans-serif */
+            background-color: #F0F2F5; /* Surface Container */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide map attribution for a cleaner dashboard look */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+
+        /* Smooth bouncy transitions for M3 expressive feel */
+        .m3-card {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+        }
+        .m3-card:active {
+            transform: scale(0.96);
+        }
+
+        /* Floating panel animation */
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-float-up {
+            animation: floatUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex justify-center pb-8">
+
+    <!-- Mobile App Container constraint for better visual presentation on desktop -->
+    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative">
+        
+        <!-- Header Section -->
+        <header class="px-6 pt-10 pb-4">
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight leading-none" id="greeting">Hi, Sarah</h1>
+                    <p class="text-gray-500 font-medium text-sm" id="current-date">Loading date...</p>
+                </div>
+                
+                <!-- Dynamic Safety Status Chip -->
+                <!-- Click this chip to toggle the emergency state -->
+                <button id="safety-chip" onclick="toggleSafetyStatus()" class="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-emerald-200 active:scale-95 cursor-pointer border border-emerald-200/50">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span id="safety-text">Area Safe</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Map & Weather Overlay Section -->
+        <section class="px-4 relative mb-20 animate-float-up">
+            <!-- Map Container -->
+            <div class="relative h-[45vh] w-full rounded-[32px] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-white z-0">
+                <div id="map" class="h-full w-full"></div>
+                <!-- Map Gradient Overlay to fade into the card below -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-[400]"></div>
+            </div>
+
+            <!-- Weather & Alert Floating Panel -->
+            <div id="alert-panel" class="absolute -bottom-14 left-8 right-8 z-10 bg-white/95 backdrop-blur-xl rounded-[28px] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-white/60 flex flex-col gap-4 m3-card cursor-default">
+                
+                <!-- Weather Row -->
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                            <span id="weather-icon" class="material-symbols-rounded">partly_cloudy_day</span>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Current</p>
+                            <p class="text-xl font-bold text-gray-800"><span id="temp-val">--</span>°C <span id="weather-desc" class="text-sm font-medium text-gray-500 font-normal">Loading...</span></p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="flex items-center gap-1 text-blue-600 justify-end">
+                            <span class="material-symbols-rounded text-[18px]">water_drop</span>
+                            <span id="precip-val" class="font-bold">--%</span>
+                        </div>
+                        <p class="text-xs text-gray-500 font-medium">Precipitation</p>
+                    </div>
+                </div>
+
+                <!-- Alert Row -->
+                <div id="alert-message-container" class="bg-gray-50 rounded-2xl p-3 flex items-start gap-3 transition-colors duration-300">
+                    <span id="alert-icon" class="material-symbols-rounded text-gray-400 mt-0.5 text-[20px]">notifications</span>
+                    <div>
+                        <p id="alert-title" class="text-sm font-bold text-gray-800">No Active Alerts</p>
+                        <p id="alert-desc" class="text-xs text-gray-500 leading-snug mt-0.5">Government systems report normal conditions in your area.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Quick Action Grid -->
+        <section class="px-6 pb-28 animate-float-up" style="animation-delay: 0.1s;">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 px-2">Quick Actions</h2>
+            <div class="grid grid-cols-2 gap-4">
+                
+                <!-- Card 1: Family Info -->
+                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-[20px] mb-3">
+                        <span class="material-symbols-rounded">family_restroom</span>
+                    </div>
+                    <h3 class="font-bold text-gray-900 text-left">Family Info</h3>
+                    <p class="text-xs text-gray-500 font-medium mt-1">2 safe, 1 pending</p>
+                </button>
+
+                <!-- Card 2: Guides -->
+                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <div class="p-3 bg-orange-50 text-orange-500 rounded-[20px] mb-3">
+                        <span class="material-symbols-rounded">menu_book</span>
+                    </div>
+                    <h3 class="font-bold text-gray-900 text-left">Survival Guides</h3>
+                    <p class="text-xs text-gray-500 font-medium mt-1">Offline ready</p>
+                </button>
+
+                <!-- Card 3: Emergency Kit -->
+                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <div class="p-3 bg-red-50 text-red-500 rounded-[20px] mb-3">
+                        <span class="material-symbols-rounded">medical_services</span>
+                    </div>
+                    <h3 class="font-bold text-gray-900 text-left">Emergency Kit</h3>
+                    <p class="text-xs text-gray-500 font-medium mt-1">75% Complete</p>
+                </button>
+
+                <!-- Card 4: Big RED SOS Button -->
+                <a href="/sos" class="m3-card flex flex-col items-center justify-center p-5 bg-red-600 rounded-[28px] shadow-[0_8px_24px_rgba(220,38,38,0.4)] border border-red-500 relative overflow-hidden group cursor-pointer active:scale-95 transition-all text-decoration-none">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                    <span class="material-symbols-rounded text-white text-4xl mb-1 animate-pulse">emergency</span>
+                    <h3 class="font-bold text-white text-xl tracking-widest">SOS</h3>
+                    <p class="text-xs text-red-100 font-medium mt-1 text-center">Tap for emergency</p>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Fixed Bottom Chat Bar -->
+        <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 backdrop-blur-md border-t border-gray-200 px-4 py-3 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex items-center gap-3">
+            <div class="bg-gray-100 flex-1 rounded-full flex items-center px-4 py-2 border border-transparent focus-within:border-blue-500 focus-within:bg-white transition-all shadow-inner">
+                <input type="text" placeholder="Type a message or command..." class="bg-transparent border-none outline-none w-full text-sm text-gray-800 placeholder-gray-500 py-1">
+                <button class="text-gray-400 hover:text-blue-600 transition-colors">
+                    <span class="material-symbols-rounded text-[20px]">mic</span>
+                </button>
+            </div>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 rounded-full flex items-center justify-center shadow-md transition-transform active:scale-90 flex-shrink-0">
+                <span class="material-symbols-rounded text-[20px] -ml-0.5">send</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // --- 1. Header Date Logic ---
+        const dateElement = document.getElementById('current-date');
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        dateElement.textContent = new Date().toLocaleDateString('en-US', options);
+
+        // --- 2. Leaflet Map Initialization ---
+        // Disable interactions so it feels like a dashboard display widget
+        const map = L.map('map', {
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false
+        }).setView([28.6139, 77.2090], 13); // Default location (Delhi)
+
+        // Using Carto Voyager tiles for a beautifully clean, M3 compatible aesthetic
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        // Custom Pulsing Blue Dot HTML
+        const blueDotHtml = `
+            <div class="relative flex items-center justify-center w-6 h-6">
+                <div class="absolute w-full h-full bg-blue-500 rounded-full animate-ping opacity-60"></div>
+                <div class="absolute w-3.5 h-3.5 bg-blue-600 border-2 border-white rounded-full shadow-[0_0_10px_rgba(37,99,235,0.8)]"></div>
+            </div>
+        `;
+
+        const blueDotIcon = L.divIcon({
+            className: 'custom-user-location',
+            html: blueDotHtml,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        // Add Marker
+        let userMarker = L.marker([28.6139, 77.2090], { icon: blueDotIcon }).addTo(map);
+
+        // Real-time Weather Fetching Function (via Open-Meteo)
+        async function fetchWeather(lat, lng) {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation_probability&timezone=auto`);
+                const data = await res.json();
+                
+                const currentTemp = Math.round(data.current_weather.temperature);
+                const weatherCode = data.current_weather.weathercode;
+                
+                const currentHourIndex = new Date().getHours();
+                const precipProb = data.hourly.precipitation_probability[currentHourIndex] || 0;
+
+                document.getElementById('temp-val').textContent = currentTemp;
+                document.getElementById('precip-val').textContent = precipProb + '%';
+
+                // Basic WMO Code parsing to Material Icons
+                let desc = "Clear";
+                let icon = "sunny";
+                if (weatherCode >= 1 && weatherCode <= 3) { desc = "Cloudy"; icon = "partly_cloudy_day"; }
+                else if (weatherCode >= 45 && weatherCode <= 48) { desc = "Fog"; icon = "foggy"; }
+                else if (weatherCode >= 51 && weatherCode <= 67) { desc = "Rain"; icon = "rainy"; }
+                else if (weatherCode >= 71 && weatherCode <= 77) { desc = "Snow"; icon = "cloudy_snowing"; }
+                else if (weatherCode >= 95) { desc = "Thunderstorm"; icon = "thunderstorm"; }
+
+                document.getElementById('weather-desc').textContent = desc;
+                document.getElementById('weather-icon').textContent = icon;
+            } catch(e) {
+                console.error("Weather fetch failed", e);
+                document.getElementById('temp-val').textContent = "--";
+                document.getElementById('weather-desc').textContent = "Unavailable";
+            }
+        }
+
+        // Attempt to get user's real location
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                map.setView([lat, lng], 14);
+                userMarker.setLatLng([lat, lng]);
+                fetchWeather(lat, lng);
+            }, (error) => {
+                console.log("Geolocation denied or failed, using default location.");
+                fetchWeather(28.6139, 77.2090);
+            });
+        } else {
+            fetchWeather(28.6139, 77.2090);
+        }
+
+        // --- 3. Dynamic Interactive State (Safe vs. Danger) ---
+        let isSafe = true;
+        
+        function toggleSafetyStatus() {
+            isSafe = !isSafe;
+            
+            const chip = document.getElementById('safety-chip');
+            const chipText = document.getElementById('safety-text');
+            const pingDot = chip.querySelector('.animate-ping');
+            const solidDot = chip.querySelector('.bg-emerald-500, .bg-red-500');
+            
+            const alertContainer = document.getElementById('alert-message-container');
+            const alertIcon = document.getElementById('alert-icon');
+            const alertTitle = document.getElementById('alert-title');
+            const alertDesc = document.getElementById('alert-desc');
+            const panel = document.getElementById('alert-panel');
+
+            if (!isSafe) {
+                // Switch to Danger State
+                // Update Chip
+                chip.classList.replace('bg-emerald-100', 'bg-red-100');
+                chip.classList.replace('text-emerald-800', 'text-red-800');
+                chip.classList.replace('border-emerald-200/50', 'border-red-200/50');
+                chip.classList.replace('hover:bg-emerald-200', 'hover:bg-red-200');
+                chipText.textContent = "Active Flood Warning";
+                
+                pingDot.classList.replace('bg-emerald-400', 'bg-red-500');
+                // Make the ping faster/more urgent
+                pingDot.classList.add('duration-700'); 
+                solidDot.classList.replace('bg-emerald-500', 'bg-red-600');
+
+                // Update Alert Panel below Map
+                alertContainer.classList.replace('bg-gray-50', 'bg-red-50');
+                alertIcon.classList.replace('text-gray-400', 'text-red-500');
+                alertIcon.textContent = 'warning';
+                alertTitle.classList.replace('text-gray-800', 'text-red-800');
+                alertTitle.textContent = "IMD Alert: Heavy Rainfall Expected";
+                alertDesc.classList.replace('text-gray-500', 'text-red-600/80');
+                alertDesc.textContent = "Urban flooding expected in your sector. Move vehicles to higher ground immediately.";
+                
+                // Add an urgent glowing border to the panel
+                panel.classList.replace('border-white/60', 'border-red-200');
+                panel.classList.add('shadow-[0_12px_40px_rgba(239,68,68,0.2)]');
+                panel.classList.remove('shadow-[0_12px_40px_rgba(0,0,0,0.12)]');
+
+            } else {
+                // Switch back to Safe State
+                chip.classList.replace('bg-red-100', 'bg-emerald-100');
+                chip.classList.replace('text-red-800', 'text-emerald-800');
+                chip.classList.replace('border-red-200/50', 'border-emerald-200/50');
+                chip.classList.replace('hover:bg-red-200', 'hover:bg-emerald-200');
+                chipText.textContent = "Area Safe";
+                
+                pingDot.classList.replace('bg-red-500', 'bg-emerald-400');
+                pingDot.classList.remove('duration-700');
+                solidDot.classList.replace('bg-red-600', 'bg-emerald-500');
+
+                alertContainer.classList.replace('bg-red-50', 'bg-gray-50');
+                alertIcon.classList.replace('text-red-500', 'text-gray-400');
+                alertIcon.textContent = 'notifications';
+                alertTitle.classList.replace('text-red-800', 'text-gray-800');
+                alertTitle.textContent = "No Active Alerts";
+                alertDesc.classList.replace('text-red-600/80', 'text-gray-500');
+                alertDesc.textContent = "Government systems report normal conditions in your area.";
+
+                panel.classList.replace('border-red-200', 'border-white/60');
+                panel.classList.remove('shadow-[0_12px_40px_rgba(239,68,68,0.2)]');
+                panel.classList.add('shadow-[0_12px_40px_rgba(0,0,0,0.12)]');
+            }
+        }
+    </script>
+</body>
+</html>

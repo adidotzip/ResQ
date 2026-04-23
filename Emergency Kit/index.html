@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emergency Kit</title>
+    
+    <!-- Tailwind CSS for M3 Expressive Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Material Symbols (Rounded) -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+    
+    <style>
+        /* Material 3 Expressive Typography */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F0F2F5; /* Surface Container */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth bouncy transitions for M3 expressive feel */
+        .m3-card {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+        }
+        .m3-card:active {
+            transform: scale(0.97);
+        }
+
+        /* Animations */
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-float-up {
+            animation: floatUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        /* Item Transitions */
+        .kit-item {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kit-item.checking {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        /* Custom Checkbox Styling */
+        .m3-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #CBD5E1;
+            border-radius: 8px; /* Slightly rounded, not full circle */
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .m3-checkbox:checked {
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+        .m3-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* AI Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex justify-center pb-8">
+
+    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative flex flex-col">
+        
+        <!-- Header -->
+        <header class="px-6 pt-10 pb-4 flex items-center justify-between z-10 sticky top-0 bg-[#F4F5F9]/90 backdrop-blur-md">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm m3-card text-decoration-none">
+                    <span class="material-symbols-rounded text-gray-700">arrow_back</span>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Emergency Kit</h1>
+                    <p class="text-sm font-medium text-blue-600" id="progress-text">60% Complete</p>
+                </div>
+            </div>
+            <div class="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-rounded">medical_services</span>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="px-6 pb-24 flex-1 flex flex-col gap-6">
+
+            <!-- Progress Bar -->
+            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden animate-float-up" style="animation-delay: 0.1s;">
+                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500 ease-out w-[60%]"></div>
+            </div>
+
+            <!-- Add Item Input -->
+            <div class="relative animate-float-up" style="animation-delay: 0.2s;">
+                <input type="text" id="new-item-input" placeholder="Add an item..." class="w-full bg-white border border-gray-200 rounded-full py-3.5 pl-5 pr-12 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] font-medium text-gray-800 placeholder-gray-400">
+                <button onclick="addNewItem()" class="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors m3-card">
+                    <span class="material-symbols-rounded text-[20px]">add</span>
+                </button>
+            </div>
+
+            <!-- Inventory List -->
+            <div class="bg-white border border-gray-100 rounded-[28px] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.04)] animate-float-up" style="animation-delay: 0.3s;">
+                <!-- Unchecked Items -->
+                <div id="unchecked-list" class="flex flex-col">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <!-- Divider for checked items -->
+                <div id="checked-divider" class="h-px bg-gray-100 mx-4 my-2 hidden"></div>
+
+                <!-- Checked Items (Drop to bottom) -->
+                <div id="checked-list" class="flex flex-col opacity-60">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- AI Contextual Engine Trigger -->
+            <button id="assess-btn" onclick="triggerAIAssessment()" class="mt-2 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[28px] py-4 px-6 flex items-center justify-between shadow-[0_8px_24px_rgba(99,102,241,0.3)] m3-card animate-float-up relative overflow-hidden group" style="animation-delay: 0.4s;">
+                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="material-symbols-rounded text-indigo-100">psychology</span>
+                    <span class="font-bold text-lg tracking-wide">Assess Needs with AI</span>
+                </div>
+                <span class="material-symbols-rounded text-indigo-200 relative z-10">arrow_forward</span>
+            </button>
+
+            <!-- Dynamic AI Output (Hidden initially) -->
+            <div id="ai-output" class="hidden flex-col gap-5 animate-float-up">
+                
+                <!-- AI Status / Threat Level -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-[24px] p-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-rounded text-[18px] text-indigo-600">radar</span>
+                        <h4 class="text-xs text-indigo-800 font-bold uppercase tracking-wider">Local Threat Intel</h4>
+                    </div>
+                    <p id="threat-text" class="text-sm font-medium text-indigo-900/80 leading-snug">
+                        Analyzing local weather patterns and cross-referencing your inventory...
+                    </p>
+                </div>
+
+                <!-- Missing Items Priorities -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 px-1">Prioritized Additions</h3>
+                    <div id="missing-items-container" class="flex flex-col gap-2">
+                        <!-- Skeletons or Content -->
+                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
+                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
+                    </div>
+                </div>
+
+                <!-- Contingency Plan Timeline -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-4 px-1 mt-2">Action Timeline</h3>
+                    <div class="relative pl-6 border-l-2 border-gray-200 ml-3 flex flex-col gap-6" id="timeline-container">
+                        <!-- Skeletons or Content -->
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- 1. Inventory State & Rendering Logic ---
+        let inventory = [
+            { id: 1, text: "Bottled Water (1 Gallon)", checked: true },
+            { id: 2, text: "First Aid Kit", checked: true },
+            { id: 3, text: "Flashlight & Batteries", checked: false },
+            { id: 4, text: "Non-perishable Food", checked: false },
+            { id: 5, text: "Power Bank", checked: false }
+        ];
+
+        const uncheckedList = document.getElementById('unchecked-list');
+        const checkedList = document.getElementById('checked-list');
+        const checkedDivider = document.getElementById('checked-divider');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const inputField = document.getElementById('new-item-input');
+
+        function renderInventory() {
+            uncheckedList.innerHTML = '';
+            checkedList.innerHTML = '';
+            
+            let checkedCount = 0;
+
+            inventory.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `kit-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors`;
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="m3-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.parentElement)">
+                    <span class="text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-gray-800'} transition-all">${item.text}</span>
+                `;
+
+                if (item.checked) {
+                    checkedList.appendChild(itemDiv);
+                    checkedCount++;
+                } else {
+                    uncheckedList.appendChild(itemDiv);
+                }
+            });
+
+            // Update Progress
+            const total = inventory.length;
+            const percent = total === 0 ? 0 : Math.round((checkedCount / total) * 100);
+            progressText.textContent = `${percent}% Complete`;
+            progressBar.style.width = `${percent}%`;
+
+            // Toggle Divider
+            if (checkedCount > 0 && checkedCount < total) {
+                checkedDivider.classList.remove('hidden');
+            } else {
+                checkedDivider.classList.add('hidden');
+            }
+        }
+
+        function toggleItem(id, element) {
+            // Add checking animation class
+            element.classList.add('checking');
+            
+            // Wait for animation to finish before moving DOM elements
+            setTimeout(() => {
+                const item = inventory.find(i => i.id === id);
+                if (item) item.checked = !item.checked;
+                renderInventory();
+            }, 300); // 300ms matches the CSS transition time
+        }
+
+        function addNewItem() {
+            const text = inputField.value.trim();
+            if (text === '') return;
+            
+            const newItem = {
+                id: Date.now(),
+                text: text,
+                checked: false
+            };
+            
+            inventory.push(newItem);
+            inputField.value = '';
+            renderInventory();
+        }
+
+        // Allow pressing Enter to add item
+        inputField.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addNewItem();
+            }
+        });
+
+        // Initial Render
+        renderInventory();
+
+
+        // --- 2. AI Contextual Engine & Dynamic Output ---
+        const aiOutputSection = document.getElementById('ai-output');
+        const assessBtn = document.getElementById('assess-btn');
+        const threatText = document.getElementById('threat-text');
+        const missingItemsContainer = document.getElementById('missing-items-container');
+        const timelineContainer = document.getElementById('timeline-container');
+
+        async function triggerAIAssessment() {
+            // UI State change
+            assessBtn.classList.add('hidden');
+            aiOutputSection.classList.remove('hidden');
+            aiOutputSection.classList.add('flex');
+            
+            // Fetch real location & weather for context
+            let lat = 28.6139, lng = 77.2090; // Default Delhi
+            try {
+                if ("geolocation" in navigator) {
+                    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+                    lat = pos.coords.latitude;
+                    lng = pos.coords.longitude;
+                }
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+                const data = await res.json();
+                generateAIResponse(data.current_weather.weathercode, data.current_weather.temperature);
+            } catch (e) {
+                console.log("Weather fetch failed, using default generation");
+                generateAIResponse(0, 25); // Default to clear weather
+            }
+        }
+
+        function generateAIResponse(weatherCode, temp) {
+            // Simulate AI Processing delay
+            setTimeout(() => {
+                // Determine Threat based on Open-Meteo WMO code
+                let threat = "Normal conditions.";
+                let missingRecommendations = [];
+                let timeline = [];
+
+                const hasFlashlight = inventory.some(i => i.text.toLowerCase().includes('flash') && i.checked);
+                const hasPowerBank = inventory.some(i => i.text.toLowerCase().includes('power') && i.checked);
+
+                if (weatherCode >= 51 && weatherCode <= 67) {
+                    threat = "High probability of continuous rainfall. Risk of localized urban flooding and power outages.";
+                    missingRecommendations = [
+                        { icon: "water_drop", title: "Waterproofing", desc: "Add dry bags or ziplocks for electronics." },
+                        { icon: "umbrella", title: "Rain Gear", desc: "Add ponchos and waterproof boots." }
+                    ];
+                    timeline = [
+                        "Step 1: Secure all physical documents in waterproof sleeves immediately.",
+                        "Step 2: Move ground-floor valuables to higher shelves.",
+                        "Step 3: Monitor municipal water-logging alerts via local radio."
+                    ];
+                } else if (weatherCode >= 95) {
+                    threat = "Severe thunderstorm detected. High risk of lightning and sudden flash floods.";
+                    missingRecommendations = [
+                        { icon: "flash_on", title: "Surge Protectors", desc: "Unplug sensitive electronics now." }
+                    ];
+                    if(!hasFlashlight) missingRecommendations.push({ icon: "highlight", title: "High-Lumen Flashlight", desc: "Critical due to imminent power failure risk."});
+                    timeline = [
+                        "Step 1: Unplug non-essential electronics to prevent surge damage.",
+                        "Step 2: Stay away from windows and plumbing fixtures.",
+                        "Step 3: Keep your Emergency Kit within arm's reach in a central interior room."
+                    ];
+                } else if (temp > 38) {
+                    threat = `Extreme Heatwave detected (${temp}°C). Risk of dehydration and heatstroke.`;
+                    missingRecommendations = [
+                        { icon: "local_drink", title: "Electrolytes", desc: "Add ORS packets to your First Aid Kit." },
+                        { icon: "ac_unit", title: "Cooling Towels", desc: "Add evaporative cooling towels." }
+                    ];
+                    timeline = [
+                        "Step 1: Pre-hydrate by drinking 500ml of water now.",
+                        "Step 2: Draw curtains to block direct sunlight.",
+                        "Step 3: Identify the coolest room in the house for resting."
+                    ];
+                } else {
+                    threat = "Conditions are stable. Good time to perform routine kit maintenance.";
+                    missingRecommendations = [
+                        { icon: "inventory", title: "Check Expirations", desc: "Verify dates on all food and medications." }
+                    ];
+                    if(!hasPowerBank) missingRecommendations.push({ icon: "battery_charging_full", title: "Power Bank", desc: "Essential for standard preparedness."});
+                    timeline = [
+                        "Step 1: Review evacuation routes with family members.",
+                        "Step 2: Update emergency contact numbers in your phone.",
+                        "Step 3: Test your flashlight batteries."
+                    ];
+                }
+
+                // Render Results
+                threatText.innerHTML = `<span class="font-bold text-indigo-700">Analysis:</span> ${threat}`;
+                
+                // Render Missing Items
+                missingItemsContainer.innerHTML = '';
+                missingRecommendations.forEach(item => {
+                    missingItemsContainer.innerHTML += `
+                        <div class="bg-white border border-red-100 rounded-2xl p-3 flex items-center gap-3 shadow-sm m3-card cursor-pointer" onclick="document.getElementById('new-item-input').value='${item.title}'; addNewItem();">
+                            <div class="p-2 bg-red-50 text-red-500 rounded-xl">
+                                <span class="material-symbols-rounded text-[20px]">${item.icon}</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-gray-900 leading-tight">${item.title}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
+                            </div>
+                            <span class="material-symbols-rounded text-gray-300">add_circle</span>
+                        </div>
+                    `;
+                });
+
+                // Render Timeline
+                timelineContainer.innerHTML = '';
+                timeline.forEach((step, index) => {
+                    const isLast = index === timeline.length - 1;
+                    timelineContainer.innerHTML += `
+                        <div class="relative">
+                            <!-- Timeline Dot -->
+                            <div class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-sm"></div>
+                            <p class="text-sm font-bold text-gray-800">${step.split(':')[0]}</p>
+                            <p class="text-sm text-gray-600 mt-1 leading-snug">${step.split(':')[1].trim()}</p>
+                        </div>
+                    `;
+                });
+
+            }, 1800); // 1.8s delay to simulate AI processing
+        }
+    </script>
+</body>
+</html>
