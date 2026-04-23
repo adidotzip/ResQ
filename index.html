@@ -60,15 +60,22 @@
                     <p class="text-gray-500 font-medium text-sm" id="current-date">Loading date...</p>
                 </div>
                 
-                <!-- Dynamic Safety Status Chip -->
-                <!-- Click this chip to toggle the emergency state -->
-                <button id="safety-chip" onclick="toggleSafetyStatus()" class="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-emerald-200 active:scale-95 cursor-pointer border border-emerald-200/50">
-                    <span class="relative flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    <span id="safety-text">Area Safe</span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- Dynamic Safety Status Chip -->
+                    <!-- Click this chip to toggle the emergency state -->
+                    <button id="safety-chip" onclick="toggleSafetyStatus()" class="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-emerald-200 active:scale-95 cursor-pointer border border-emerald-200/50">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        <span id="safety-text">Area Safe</span>
+                    </button>
+
+                    <!-- Settings Button -->
+                    <a href="settings.html" class="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm m3-card text-decoration-none">
+                        <span class="material-symbols-rounded text-gray-700">settings</span>
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -122,34 +129,34 @@
             <div class="grid grid-cols-2 gap-4">
                 
                 <!-- Card 1: Family Info -->
-                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                <a href="Family Center/index.html" class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100 text-decoration-none">
                     <div class="p-3 bg-indigo-50 text-indigo-600 rounded-[20px] mb-3">
                         <span class="material-symbols-rounded">family_restroom</span>
                     </div>
                     <h3 class="font-bold text-gray-900 text-left">Family Info</h3>
-                    <p class="text-xs text-gray-500 font-medium mt-1">2 safe, 1 pending</p>
-                </button>
+                    <p id="family-summary" class="text-xs text-gray-500 font-medium mt-1">2 safe, 1 pending</p>
+                </a>
 
                 <!-- Card 2: Guides -->
-                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                <a href="Survival Guides/index.html" class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100 text-decoration-none">
                     <div class="p-3 bg-orange-50 text-orange-500 rounded-[20px] mb-3">
                         <span class="material-symbols-rounded">menu_book</span>
                     </div>
                     <h3 class="font-bold text-gray-900 text-left">Survival Guides</h3>
                     <p class="text-xs text-gray-500 font-medium mt-1">Offline ready</p>
-                </button>
+                </a>
 
                 <!-- Card 3: Emergency Kit -->
-                <button class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                <a href="Emergency Kit/index.html" class="m3-card flex flex-col items-start p-5 bg-white rounded-[28px] shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100 text-decoration-none">
                     <div class="p-3 bg-red-50 text-red-500 rounded-[20px] mb-3">
                         <span class="material-symbols-rounded">medical_services</span>
                     </div>
                     <h3 class="font-bold text-gray-900 text-left">Emergency Kit</h3>
-                    <p class="text-xs text-gray-500 font-medium mt-1">75% Complete</p>
-                </button>
+                    <p id="kit-summary" class="text-xs text-gray-500 font-medium mt-1">75% Complete</p>
+                </a>
 
                 <!-- Card 4: Big RED SOS Button -->
-                <a href="/sos" class="m3-card flex flex-col items-center justify-center p-5 bg-red-600 rounded-[28px] shadow-[0_8px_24px_rgba(220,38,38,0.4)] border border-red-500 relative overflow-hidden group cursor-pointer active:scale-95 transition-all text-decoration-none">
+                <a href="SOS/index.html" class="m3-card flex flex-col items-center justify-center p-5 bg-red-600 rounded-[28px] shadow-[0_8px_24px_rgba(220,38,38,0.4)] border border-red-500 relative overflow-hidden group cursor-pointer active:scale-95 transition-all text-decoration-none">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                     <span class="material-symbols-rounded text-white text-4xl mb-1 animate-pulse">emergency</span>
                     <h3 class="font-bold text-white text-xl tracking-widest">SOS</h3>
@@ -176,8 +183,26 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/storage.js"></script>
     
     <script>
+        // --- 0. Sync with Storage ---
+        function syncUI() {
+            const userName = Storage.getUserName();
+            document.getElementById('greeting').textContent = `Hi, ${userName}`;
+
+            const members = Storage.getFamilyMembers();
+            const safeCount = members.filter(m => m.status === 'safe').length;
+            const dangerCount = members.filter(m => m.status === 'danger').length;
+            document.getElementById('family-summary').textContent = `${safeCount} safe, ${dangerCount} pending`;
+
+            const inventory = Storage.getInventory();
+            const checkedCount = inventory.filter(i => i.checked).length;
+            const percent = Math.round((checkedCount / inventory.length) * 100);
+            document.getElementById('kit-summary').textContent = `${percent}% Complete`;
+        }
+        syncUI();
+
         // --- 1. Header Date Logic ---
         const dateElement = document.getElementById('current-date');
         const options = { weekday: 'long', month: 'long', day: 'numeric' };

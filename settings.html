@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Settings</title>
+
+    <!-- Tailwind CSS for M3 Expressive Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Material Symbols (Rounded) -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F0F2F5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .m3-card {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+        }
+        .m3-card:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-float-up {
+            animation: floatUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex justify-center pb-8">
+
+    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative flex flex-col">
+
+        <!-- Header -->
+        <header class="px-6 pt-10 pb-4 flex items-center gap-4 z-10 sticky top-0 bg-[#F4F5F9]/90 backdrop-blur-md">
+            <a href="index.html" class="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm m3-card">
+                <span class="material-symbols-rounded text-gray-700">arrow_back</span>
+            </a>
+            <h1 class="text-xl font-bold text-gray-900 leading-tight">Settings</h1>
+        </header>
+
+        <div class="px-6 py-4 flex flex-col gap-8 animate-float-up">
+
+            <!-- User Profile Section -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 px-2">Profile</h2>
+                <div class="bg-white rounded-[28px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                    <input type="text" id="user-name-input" class="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:border-blue-500 transition-all" placeholder="Enter your name">
+                </div>
+            </section>
+
+            <!-- Family Members Section -->
+            <section>
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Family Members</h2>
+                    <button onclick="addFamilyMember()" class="text-blue-600 text-sm font-bold flex items-center gap-1">
+                        <span class="material-symbols-rounded text-[18px]">add</span> Add
+                    </button>
+                </div>
+                <div id="family-list" class="flex flex-col gap-3">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Save Button -->
+            <button onclick="saveSettings()" class="w-full bg-blue-600 text-white rounded-full py-4 font-bold shadow-lg hover:bg-blue-700 transition-all m3-card mt-4">
+                Save All Changes
+            </button>
+
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script>
+        const nameInput = document.getElementById('user-name-input');
+        const familyList = document.getElementById('family-list');
+        let members = Storage.getFamilyMembers();
+
+        nameInput.value = Storage.getUserName();
+
+        function renderFamily() {
+            familyList.innerHTML = '';
+            members.forEach((member, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-[24px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col gap-3';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Member #${index + 1}</span>
+                        ${member.id !== 'sarah' ? `
+                            <button onclick="removeMember(${index})" class="text-red-500">
+                                <span class="material-symbols-rounded text-[20px]">delete</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1">Name</label>
+                            <input type="text" value="${member.name}" oninput="updateMember(${index}, 'name', this.value)" class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1">Relation</label>
+                            <input type="text" value="${member.relation}" onchange="updateMember(${index}, 'relation', this.value)" class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-blue-500" ${member.id === 'sarah' ? 'readonly' : ''}>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1">Phone / WhatsApp</label>
+                        <input type="tel" value="${member.phone || ''}" onchange="updateMember(${index}, 'phone', this.value)" class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-blue-500" placeholder="+1234567890">
+                    </div>
+                `;
+                familyList.appendChild(card);
+            });
+        }
+
+        function updateMember(index, field, value) {
+            members[index][field] = value;
+            if (members[index].id === 'sarah' && field === 'name') {
+                nameInput.value = value;
+            }
+        }
+
+        function addFamilyMember() {
+            members.push({
+                id: 'member_' + Date.now(),
+                name: '',
+                relation: '',
+                phone: '',
+                lat: 28.6139,
+                lng: 77.2090,
+                avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
+                status: 'safe',
+                lastSeen: 'Just now',
+                battery: '100%'
+            });
+            renderFamily();
+        }
+
+        function removeMember(index) {
+            if (members[index].id === 'sarah') return;
+            members.splice(index, 1);
+            renderFamily();
+        }
+
+        // Listen for changes in the main name input to sync with "Sarah (You)" entry
+        nameInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            const sarahIndex = members.findIndex(m => m.id === 'sarah');
+            if (sarahIndex !== -1) {
+                members[sarahIndex].name = val;
+                renderFamily();
+            }
+        });
+
+        function saveSettings() {
+            Storage.setUserName(nameInput.value);
+            Storage.setFamilyMembers(members);
+
+            // Show a simple feedback
+            const btn = document.querySelector('button[onclick="saveSettings()"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Saved Successfully!';
+            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+
+        renderFamily();
+    </script>
+</body>
+</html>
