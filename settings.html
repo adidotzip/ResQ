@@ -78,6 +78,23 @@
                 </div>
             </section>
 
+            <!-- Connection Link Section -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 px-2">Connection Link</h2>
+                <div class="bg-white rounded-[28px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col gap-4">
+                    <p class="text-sm text-gray-600">Generate a link to share with your family members so they can connect with you and see your location.</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="connection-link-input" class="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:border-blue-500 transition-all" readonly placeholder="Click Generate to create link">
+                        <button onclick="copyLink()" class="h-12 w-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center m3-card hover:bg-gray-200 transition-colors flex-shrink-0" title="Copy Link">
+                            <span class="material-symbols-rounded">content_copy</span>
+                        </button>
+                    </div>
+                    <button onclick="generateConnectionLink()" class="w-full bg-blue-50 text-blue-600 rounded-xl py-3 font-bold hover:bg-blue-100 transition-colors">
+                        Generate Link
+                    </button>
+                </div>
+            </section>
+
             <!-- Family Members Section -->
             <section>
                 <div class="flex justify-between items-center mb-4 px-2">
@@ -182,6 +199,54 @@
                 renderFamily();
             }
         });
+
+        function generateConnectionLink() {
+            const selfMember = members.find(m => m.id === 'user_self');
+            if (!selfMember) return;
+
+            const updateLocationAndGenerate = (lat, lng) => {
+                const linkData = {
+                    id: 'member_' + Date.now(),
+                    name: selfMember.name.replace(' (You)', ''),
+                    relation: 'Family',
+                    lat: lat,
+                    lng: lng,
+                    avatar: selfMember.avatar,
+                    status: 'safe',
+                    lastSeen: 'Just now',
+                    battery: '100%',
+                    phone: selfMember.phone || ''
+                };
+
+                const encodedData = btoa(JSON.stringify(linkData));
+                const linkUrl = window.location.origin + window.location.pathname.replace('settings.html', 'index.html') + '?connect=' + encodedData;
+                document.getElementById('connection-link-input').value = linkUrl;
+            };
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    updateLocationAndGenerate(position.coords.latitude, position.coords.longitude);
+                }, () => {
+                    updateLocationAndGenerate(selfMember.lat, selfMember.lng);
+                });
+            } else {
+                updateLocationAndGenerate(selfMember.lat, selfMember.lng);
+            }
+        }
+
+        function copyLink() {
+            const linkInput = document.getElementById('connection-link-input');
+            if (!linkInput.value) return;
+
+            linkInput.select();
+            document.execCommand('copy');
+
+            const btn = document.querySelector('button[onclick="copyLink()"]');
+            btn.innerHTML = '<span class="material-symbols-rounded text-emerald-600">check</span>';
+            setTimeout(() => {
+                btn.innerHTML = '<span class="material-symbols-rounded">content_copy</span>';
+            }, 2000);
+        }
 
         function saveSettings() {
             Storage.setUserName(nameInput.value);
