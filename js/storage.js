@@ -2,7 +2,9 @@ const Storage = {
     keys: {
         USER_NAME: 'emergency_app_user_name',
         FAMILY_MEMBERS: 'emergency_app_family_members',
-        INVENTORY: 'emergency_app_inventory'
+        INVENTORY: 'emergency_app_inventory',
+        API_KEY: 'emergency_app_api_key',
+        SELECTED_MODEL: 'emergency_app_selected_model'
     },
 
     init() {
@@ -84,6 +86,22 @@ const Storage = {
 
     setInventory(inventory) {
         localStorage.setItem(this.keys.INVENTORY, JSON.stringify(inventory));
+    },
+
+    getApiKey() {
+        return localStorage.getItem(this.keys.API_KEY) || '';
+    },
+
+    setApiKey(key) {
+        localStorage.setItem(this.keys.API_KEY, key);
+    },
+
+    getSelectedModel() {
+        return localStorage.getItem(this.keys.SELECTED_MODEL) || 'google/gemma-4-31b-it:free';
+    },
+
+    setSelectedModel(model) {
+        localStorage.setItem(this.keys.SELECTED_MODEL, model);
     }
 };
 
