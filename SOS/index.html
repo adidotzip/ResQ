@@ -164,16 +164,12 @@
 
     </main>
 
+    <script src="../js/storage.js"></script>
     <script>
-        // Mock Storage Implementation to replace broken external script
-        const Storage = {
-            getFamilyMembers: function() {
-                return [
-                    { id: 'sarah', name: 'Sarah', phone: '' },
-                    { id: 'emergency_contact', name: 'Emergency Contact', phone: '1234567890' }
-                ];
-            }
-        };
+        // --- 0. Auth & Initialization ---
+        if (!Storage.getUserName()) {
+            window.location.href = '../onboarding.html';
+        }
 
         // --- 1. Audio API For Real Siren ---
         let audioCtx;
@@ -352,8 +348,8 @@
             const message = `EMERGENCY: I need help. My exact location is ${mapsLink}\n\nLat: ${lat}\nLon: ${lon}\n\nAutomated AI Context: ${currentDisasterType} detected in area.`;
 
             const members = Storage.getFamilyMembers();
-            // Find first member that isn't 'sarah' and has a phone number
-            const contact = members.find(m => m.id !== 'sarah' && m.phone) || members[1];
+            // Find first member that isn't the main user and has a phone number
+            const contact = members.find(m => m.id !== 'user_self' && m.phone) || members[1];
             const phone = contact ? contact.phone.replace(/[^0-9]/g, '') : '';
 
             waBtn.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
