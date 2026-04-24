@@ -119,7 +119,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Member #${index + 1}</span>
-                        ${member.id !== 'sarah' ? `
+                        ${member.id !== 'user_self' ? `
                             <button onclick="removeMember(${index})" class="text-red-500">
                                 <span class="material-symbols-rounded text-[20px]">delete</span>
                             </button>
@@ -132,7 +132,7 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1 ml-1">Relation</label>
-                            <input type="text" value="${member.relation}" onchange="updateMember(${index}, 'relation', this.value)" class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-blue-500" ${member.id === 'sarah' ? 'readonly' : ''}>
+                            <input type="text" value="${member.relation}" onchange="updateMember(${index}, 'relation', this.value)" class="w-full bg-gray-50 border border-gray-100 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-blue-500" ${member.id === 'user_self' ? 'readonly' : ''}>
                         </div>
                     </div>
                     <div>
@@ -146,8 +146,8 @@
 
         function updateMember(index, field, value) {
             members[index][field] = value;
-            if (members[index].id === 'sarah' && field === 'name') {
-                nameInput.value = value;
+            if (members[index].id === 'user_self' && field === 'name') {
+                nameInput.value = value.replace(' (You)', '');
             }
         }
 
@@ -168,17 +168,17 @@
         }
 
         function removeMember(index) {
-            if (members[index].id === 'sarah') return;
+            if (members[index].id === 'user_self') return;
             members.splice(index, 1);
             renderFamily();
         }
 
-        // Listen for changes in the main name input to sync with "Sarah (You)" entry
+        // Listen for changes in the main name input to sync with "User (You)" entry
         nameInput.addEventListener('input', (e) => {
             const val = e.target.value;
-            const sarahIndex = members.findIndex(m => m.id === 'sarah');
-            if (sarahIndex !== -1) {
-                members[sarahIndex].name = val;
+            const selfIndex = members.findIndex(m => m.id === 'user_self');
+            if (selfIndex !== -1) {
+                members[selfIndex].name = `${val} (You)`;
                 renderFamily();
             }
         });

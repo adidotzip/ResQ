@@ -51,12 +51,12 @@
         <header class="px-6 pt-10 pb-4">
             <div class="flex justify-between items-start">
                 <div class="flex flex-col gap-1">
-                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight leading-none" id="greeting">Hi, Sarah</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight leading-none" id="greeting">Hi, User</h1>
                     <p class="text-gray-500 font-medium text-sm" id="current-date">Loading date...</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <button id="safety-chip" onclick="toggleSafetyStatus()" class="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-emerald-200 active:scale-95 cursor-pointer border border-emerald-200/50">
+                    <button id="safety-chip" class="group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 cursor-default border border-emerald-200/50">
                         <span class="relative flex h-3 w-3">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -178,6 +178,13 @@
     <script src="js/storage.js"></script>
     
     <script>
+        // --- 0. Auth & Initialization ---
+        if (!Storage.getUserName()) {
+            window.location.href = 'onboarding.html';
+        } else {
+            document.getElementById('greeting').textContent = `Hi, ${Storage.getUserName()}`;
+        }
+
         // --- 1. Header Date Logic ---
         const dateElement = document.getElementById('current-date');
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -223,10 +230,21 @@
 
                 document.getElementById('weather-desc').textContent = desc;
                 document.getElementById('weather-icon').textContent = icon;
+
+                // Dynamically update safety status based on real weather data
+                // Assume danger if precipitation probability is high (>50%) or if it's a thunderstorm
+                if (precipProb > 50 || weatherCode >= 95) {
+                    setSafetyStatus(false,
+                        weatherCode >= 95 ? "Severe Thunderstorm Warning" : "Heavy Rainfall Expected",
+                        "Stay indoors and avoid travel if possible.");
+                } else {
+                    setSafetyStatus(true, "No Active Alerts", "Government systems report normal conditions in your area.");
+                }
             } catch(e) {
                 console.error("Weather fetch failed", e);
                 document.getElementById('temp-val').textContent = "--";
                 document.getElementById('weather-desc').textContent = "Unavailable";
+                setSafetyStatus(true, "No Active Alerts", "Unable to fetch real-time data.");
             }
         }
 
@@ -245,8 +263,8 @@
         // --- 3. Dynamic Interactive State ---
         let isSafe = true;
         
-        function toggleSafetyStatus() {
-            isSafe = !isSafe;
+        function setSafetyStatus(safe, title, desc) {
+            isSafe = safe;
             const chip = document.getElementById('safety-chip');
             const chipText = document.getElementById('safety-text');
             const pingDot = chip.querySelector('.animate-ping');
@@ -258,8 +276,8 @@
             const panel = document.getElementById('alert-panel');
 
             if (!isSafe) {
-                chip.className = "group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-100 text-red-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-red-200 active:scale-95 cursor-pointer border border-red-200/50";
-                chipText.textContent = "Active Flood Warning";
+                chip.className = "group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-red-100 text-red-800 font-bold text-sm shadow-sm transition-all duration-300 cursor-default border border-red-200/50";
+                chipText.textContent = "Active Warning";
                 pingDot.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 duration-700";
                 solidDot.className = "relative inline-flex rounded-full h-3 w-3 bg-red-600";
 
@@ -267,13 +285,13 @@
                 alertIcon.className = "material-symbols-rounded text-red-500 mt-0.5 text-[20px]";
                 alertIcon.textContent = 'warning';
                 alertTitle.className = "text-sm font-bold text-red-800";
-                alertTitle.textContent = "IMD Alert: Heavy Rainfall Expected";
+                alertTitle.textContent = title;
                 alertDesc.className = "text-xs text-red-600/80 leading-snug mt-0.5";
-                alertDesc.textContent = "Urban flooding expected in your sector. Move vehicles to higher ground immediately.";
+                alertDesc.textContent = desc;
                 
                 panel.className = "absolute -bottom-14 left-8 right-8 z-10 bg-white/95 backdrop-blur-xl rounded-[28px] p-5 shadow-[0_12px_40px_rgba(239,68,68,0.2)] border border-red-200 flex flex-col gap-4 m3-card cursor-default";
             } else {
-                chip.className = "group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 hover:bg-emerald-200 active:scale-95 cursor-pointer border border-emerald-200/50";
+                chip.className = "group inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm shadow-sm transition-all duration-300 cursor-default border border-emerald-200/50";
                 chipText.textContent = "Area Safe";
                 pingDot.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
                 solidDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
@@ -282,9 +300,9 @@
                 alertIcon.className = "material-symbols-rounded text-gray-400 mt-0.5 text-[20px]";
                 alertIcon.textContent = 'notifications';
                 alertTitle.className = "text-sm font-bold text-gray-800";
-                alertTitle.textContent = "No Active Alerts";
+                alertTitle.textContent = title;
                 alertDesc.className = "text-xs text-gray-500 leading-snug mt-0.5";
-                alertDesc.textContent = "Government systems report normal conditions in your area.";
+                alertDesc.textContent = desc;
 
                 panel.className = "absolute -bottom-14 left-8 right-8 z-10 bg-white/95 backdrop-blur-xl rounded-[28px] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-white/60 flex flex-col gap-4 m3-card cursor-default";
             }

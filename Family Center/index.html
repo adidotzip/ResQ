@@ -162,6 +162,11 @@
     <script src="../js/storage.js"></script>
     
     <script>
+        // --- 0. Auth & Initialization ---
+        if (!Storage.getUserName()) {
+            window.location.href = '../onboarding.html';
+        }
+
         // --- 1. Family Data ---
         const familyData = Storage.getFamilyMembers();
 

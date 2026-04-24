@@ -194,6 +194,11 @@
 
     <script src="../js/storage.js"></script>
     <script>
+        // --- 0. Auth & Initialization ---
+        if (!Storage.getUserName()) {
+            window.location.href = '../onboarding.html';
+        }
+
         // --- 1. Inventory State & Rendering Logic ---
         let inventory = Storage.getInventory();
 
