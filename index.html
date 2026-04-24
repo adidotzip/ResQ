@@ -180,9 +180,31 @@
     <script>
         // --- 0. Auth & Initialization ---
         if (!Storage.getUserName()) {
-            window.location.href = 'onboarding.html';
+            window.location.href = 'onboarding.html' + window.location.search;
         } else {
             document.getElementById('greeting').textContent = `Hi, ${Storage.getUserName()}`;
+
+            // Check for connection link
+            const urlParams = new URLSearchParams(window.location.search);
+            const connectData = urlParams.get('connect');
+            if (connectData) {
+                try {
+                    const newMember = JSON.parse(atob(connectData));
+                    const members = Storage.getFamilyMembers() || [];
+
+                    // Check if member already exists
+                    if (!members.find(m => m.id === newMember.id)) {
+                        members.push(newMember);
+                        Storage.setFamilyMembers(members);
+                        alert(`Successfully connected with ${newMember.name}!`);
+                    }
+
+                    // Clean up URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) {
+                    console.error('Failed to parse connection data:', e);
+                }
+            }
         }
 
         // --- 1. Header Date Logic ---
