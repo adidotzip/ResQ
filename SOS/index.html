@@ -76,7 +76,7 @@
         
         <!-- Header -->
         <header class="flex justify-between items-center z-10 animate-float-up">
-            <a href="../index.html" class="h-12 w-12 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] m3-card text-decoration-none">
+            <a href="javascript:history.back()" class="h-12 w-12 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] m3-card text-decoration-none">
                 <span class="material-symbols-rounded text-gray-700">arrow_back</span>
             </a>
             <div class="px-4 py-2 rounded-full bg-red-100 border border-red-200/60 flex items-center gap-2 shadow-sm">
@@ -88,7 +88,7 @@
             </div>
         </header>
 
-        <!-- Main SOS Interaction Area (Takes up ~40% of screen conceptually) -->
+        <!-- Main SOS Interaction Area -->
         <section class="flex-1 flex flex-col items-center justify-center w-full mt-4">
             
             <!-- Hold to Activate Button -->
@@ -164,9 +164,54 @@
 
     </main>
 
-    <script src="../js/storage.js"></script>
     <script>
-        // --- 1. Circular Progress & Hold-to-Activate Logic ---
+        // Mock Storage Implementation to replace broken external script
+        const Storage = {
+            getFamilyMembers: function() {
+                return [
+                    { id: 'sarah', name: 'Sarah', phone: '' },
+                    { id: 'emergency_contact', name: 'Emergency Contact', phone: '1234567890' }
+                ];
+            }
+        };
+
+        // --- 1. Audio API For Real Siren ---
+        let audioCtx;
+        let sirenOscillator;
+        let sirenInterval;
+
+        function startAudibleSiren() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
+                sirenOscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                sirenOscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                sirenOscillator.type = 'square';
+                gainNode.gain.value = 0.5; // Volume control
+                sirenOscillator.start();
+
+                // Alternate frequency to sound like an alarm
+                let isHighPitch = false;
+                sirenInterval = setInterval(() => {
+                    isHighPitch = !isHighPitch;
+                    sirenOscillator.frequency.setValueAtTime(isHighPitch ? 800 : 400, audioCtx.currentTime);
+                }, 400);
+
+            } catch (e) {
+                console.error("Web Audio API not supported in this browser.", e);
+            }
+        }
+
+        // --- 2. Circular Progress & Hold-to-Activate Logic ---
         const btn = document.getElementById('sos-btn');
         const triggerArea = document.getElementById('sos-trigger-area');
         const progressRing = document.getElementById('progress-ring');
@@ -206,12 +251,19 @@
             setProgress(100);
 
             // Vibrate if supported
-            if(navigator.vibrate) navigator.vibrate([500, 200, 500]);
+            if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 1000]);
+
+            // Trigger the audible alarm
+            startAudibleSiren();
+            
+            // Emphasize the WhatsApp link to prompt the user
+            document.getElementById('whatsapp-btn').classList.add('animate-pulse');
         }
 
         function startHold(e) {
             if(isActivated) return;
-            e.preventDefault(); // Prevent default touch behaviors
+            // Prevent default touch behaviors (like text selection or magnifying glass)
+            if (e.cancelable) e.preventDefault(); 
             
             // Disable the bounce effect while pressing to keep the ring aligned
             btn.classList.remove('m3-card');
@@ -232,7 +284,8 @@
 
         function endHold(e) {
             if(isActivated) return;
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
+            
             clearInterval(progressInterval);
             progress = 0;
             setProgress(0);
@@ -254,7 +307,7 @@
         triggerArea.addEventListener('contextmenu', e => e.preventDefault());
 
 
-        // --- 2. Live Telemetry & AI Context Logic ---
+        // --- 3. Live Telemetry & AI Context Logic ---
         const latEl = document.getElementById('telemetry-lat');
         const lonEl = document.getElementById('telemetry-lon');
         const accEl = document.getElementById('telemetry-acc');
@@ -286,6 +339,9 @@
 
                 aiAssessment.innerHTML = `<span class="text-indigo-800 font-bold">Analysis Complete:</span> ${riskText}`;
                 
+                // Refresh link to include new AI context
+                updateWhatsAppLink(lat, lng);
+                
             } catch(e) {
                 aiAssessment.textContent = "Unable to fetch environmental data. Relying on GPS telemetry only.";
             }
@@ -293,10 +349,10 @@
 
         function updateWhatsAppLink(lat, lon) {
             const mapsLink = `https://maps.google.com/?q=${lat},${lon}`;
-            const message = `EMERGENCY: I need help. My exact location is ${mapsLink}\n\nLat: ${lat}\nLon: ${lon}\n\nGenerated by AI: Potential risk of ${currentDisasterType} in my area.`;
+            const message = `EMERGENCY: I need help. My exact location is ${mapsLink}\n\nLat: ${lat}\nLon: ${lon}\n\nAutomated AI Context: ${currentDisasterType} detected in area.`;
 
             const members = Storage.getFamilyMembers();
-            // Find first member that isn't 'self' and has a phone number
+            // Find first member that isn't 'sarah' and has a phone number
             const contact = members.find(m => m.id !== 'sarah' && m.phone) || members[1];
             const phone = contact ? contact.phone.replace(/[^0-9]/g, '') : '';
 
@@ -330,7 +386,7 @@
                     latEl.textContent = "ERROR";
                     lonEl.textContent = "ERROR";
                     accEl.textContent = "N/A";
-                    aiAssessment.textContent = "GPS Access Denied. Cannot generate precise location telemetry.";
+                    aiAssessment.textContent = "GPS Access Denied. Cannot generate precise location telemetry. Please enable location services.";
                 },
                 { enableHighAccuracy: true, maximumAge: 0 }
             );
