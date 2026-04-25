@@ -1,6 +1,7 @@
 const Storage = {
     keys: {
         USER_NAME: 'emergency_app_user_name',
+        USER_ID: 'emergency_app_user_id',
         FAMILY_MEMBERS: 'emergency_app_family_members',
         INVENTORY: 'emergency_app_inventory',
         API_KEY: 'emergency_app_api_key',
@@ -26,6 +27,15 @@ const Storage = {
 
     setUserName(name) {
         localStorage.setItem(this.keys.USER_NAME, name);
+    },
+
+    getUserId() {
+        let id = localStorage.getItem(this.keys.USER_ID);
+        if (!id) {
+            id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem(this.keys.USER_ID, id);
+        }
+        return id;
     },
 
     getFamilyMembers() {
