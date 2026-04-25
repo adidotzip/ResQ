@@ -209,6 +209,7 @@
         const progressBar = document.getElementById('progress-bar');
         const inputField = document.getElementById('new-item-input');
 
+        
         function renderInventory() {
             uncheckedList.innerHTML = '';
             checkedList.innerHTML = '';
@@ -217,10 +218,15 @@
 
             inventory.forEach(item => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = `kit-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors`;
+                itemDiv.className = `kit-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors w-full justify-between`;
                 itemDiv.innerHTML = `
-                    <input type="checkbox" class="m3-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.parentElement)">
-                    <span class="text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-gray-800'} transition-all">${item.text}</span>
+                    <div class="flex items-center gap-3 flex-1">
+                        <input type="checkbox" class="m3-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.closest('.kit-item'))">
+                        <span class="text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-gray-800'} transition-all">${item.text}</span>
+                    </div>
+                    <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 transition-colors m-1 ml-auto flex-shrink-0">
+                        <span class="material-symbols-rounded">delete</span>
+                    </button>
                 `;
 
                 if (item.checked) {
@@ -232,6 +238,7 @@
             });
 
             // Update Progress
+
             const total = inventory.length;
             const percent = total === 0 ? 0 : Math.round((checkedCount / total) * 100);
             progressText.textContent = `${percent}% Complete`;
@@ -245,7 +252,15 @@
             }
         }
 
+        
+        function deleteItem(id) {
+            inventory = inventory.filter(i => i.id !== id);
+            Storage.setInventory(inventory);
+            renderInventory();
+        }
+
         function toggleItem(id, element) {
+
             // Add checking animation class
             element.classList.add('checking');
             
@@ -292,6 +307,7 @@
         const missingItemsContainer = document.getElementById('missing-items-container');
         const timelineContainer = document.getElementById('timeline-container');
 
+        
         async function triggerAIAssessment() {
             // UI State change
             assessBtn.classList.add('hidden');
@@ -312,6 +328,124 @@
             } catch (e) {
                 console.log("Weather fetch failed, using default generation");
                 generateAIResponse(0, 25); // Default to clear weather
+            }
+        }
+
+        async function generateAIResponse(weatherCode, temp) {
+            const apiKey = Storage.getApiKey();
+            const selectedModel = Storage.getSelectedModel();
+            
+            if (!apiKey) {
+                threatText.innerHTML = `<span class="font-bold text-red-600">Error:</span> Please configure your OpenRouter API Key in Settings.`;
+                missingItemsContainer.innerHTML = '';
+                timelineContainer.innerHTML = '';
+                return;
+            }
+
+            // Map weather code to description
+            let weatherDesc = "Clear/Cloudy";
+            if (weatherCode >= 51 && weatherCode <= 67) weatherDesc = "Raining";
+            if (weatherCode >= 95) weatherDesc = "Thunderstorm";
+
+            const inventoryStr = inventory.map(i => `${i.text} (${i.checked ? 'Checked' : 'Missing'})`).join(', ');
+
+            const systemPrompt = `You are an emergency response AI. 
+Current Weather: ${temp}°C, ${weatherDesc}.
+User Inventory: ${inventoryStr}
+
+Return ONLY a valid JSON object with the following structure (no markdown wrapper, just raw JSON):
+{
+  "threat": "Brief analysis string based on weather and inventory",
+  "missingRecommendations": [
+    { "icon": "water_drop", "title": "Item name", "desc": "Reason" }
+  ],
+  "timeline": [
+    "Step 1: Action",
+    "Step 2: Action"
+  ]
+}
+Ensure the icons are valid Google Material Symbols Rounded strings.`;
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Command Center AI',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: [{ role: 'system', content: systemPrompt }]
+                    })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                
+                const data = await response.json();
+                let content = data.choices[0].message.content.trim();
+                
+                // Strip markdown codeblock if present
+                if (content.startsWith('```json')) {
+                    content = content.replace(/^```json/m, '').replace(/```$/m, '').trim();
+                } else if (content.startsWith('```')) {
+                    content = content.replace(/^```/m, '').replace(/```$/m, '').trim();
+                }
+
+                const aiResult = JSON.parse(content);
+
+                // Render Results
+                threatText.innerHTML = `<span class="font-bold text-indigo-700">Analysis:</span> ${aiResult.threat}`;
+                
+                missingItemsContainer.innerHTML = '';
+                if (aiResult.missingRecommendations && aiResult.missingRecommendations.length > 0) {
+                    aiResult.missingRecommendations.forEach(item => {
+                        missingItemsContainer.innerHTML += `
+                            <div class="bg-white border border-red-100 rounded-2xl p-3 flex items-center gap-3 shadow-sm m3-card cursor-pointer" onclick="document.getElementById('new-item-input').value='${item.title}'; addNewItem();">
+                                <div class="p-2 bg-red-50 text-red-500 rounded-xl">
+                                    <span class="material-symbols-rounded text-[20px]">${item.icon}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold text-gray-900 leading-tight">${item.title}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
+                                </div>
+                                <span class="material-symbols-rounded text-gray-300">add_circle</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    missingItemsContainer.innerHTML = '<p class="text-sm text-gray-500 px-2">No critical missing items based on current data.</p>';
+                }
+
+                timelineContainer.innerHTML = '';
+                if (aiResult.timeline && aiResult.timeline.length > 0) {
+                    aiResult.timeline.forEach((step, index) => {
+                        const isLast = index === aiResult.timeline.length - 1;
+                        let title = step, desc = '';
+                        if (step.includes(':')) {
+                            const parts = step.split(':');
+                            title = parts[0];
+                            desc = parts.slice(1).join(':').trim();
+                        }
+                        timelineContainer.innerHTML += `
+                            <div class="relative">
+                                <!-- Timeline Dot -->
+                                <div class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-sm"></div>
+                                <p class="text-sm font-bold text-gray-800">${title}</p>
+                                <p class="text-sm text-gray-600 mt-1 leading-snug">${desc}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    timelineContainer.innerHTML = '<p class="text-sm text-gray-500 px-2">No immediate actions required.</p>';
+                }
+
+            } catch (err) {
+                console.error(err);
+                threatText.innerHTML = `<span class="font-bold text-red-600">Error:</span> Could not fetch AI assessment.`;
+                missingItemsContainer.innerHTML = '';
+                timelineContainer.innerHTML = '';
             }
         }
 
