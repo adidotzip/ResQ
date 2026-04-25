@@ -162,11 +162,11 @@
         // Setup Supabase
         const supabaseUrl = 'https://izvphjsqprwevucmvawx.supabase.co/';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dnBoanNxcHJ3ZXZ1Y212YXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwODM3NDUsImV4cCI6MjA5MjY1OTc0NX0.fSlVTDuvpWV2nBvg49cyFl1pTDptfOzWjvvI-meqbZ4';
-        let supabase, locationChannel;
+        let supabaseClient, locationChannel;
 
-        if (window.supabase && supabaseUrl !== 'https://izvphjsqprwevucmvawx.supabase.co/') {
-            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-            locationChannel = supabase.channel('public:family_locations');
+        if (window.supabase) {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            locationChannel = supabaseClient.channel('public:family_locations');
             
             locationChannel
                 .on('broadcast', { event: 'location_update' }, (payload) => {
@@ -242,7 +242,7 @@
                     type: 'broadcast',
                     event: 'location_update',
                     payload: {
-                        id: Storage.getUserName(),
+                        id: Storage.getUserId(),
                         name: Storage.getUserName(),
                         avatar: myAvatar,
                         lat: lat,

@@ -253,7 +253,7 @@
 
             const updateLocationAndGenerate = (lat, lng) => {
                 const linkData = {
-                    id: 'member_' + Date.now(),
+                    id: Storage.getUserId(),
                     name: selfMember.name.replace(' (You)', ''),
                     relation: 'Family',
                     lat: lat,
