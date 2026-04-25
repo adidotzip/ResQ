@@ -178,7 +178,35 @@
     <script src="js/storage.js"></script>
     
     <script>
+        
         // --- 0. Auth & Initialization ---
+        function updateQuickActions() {
+            // Update Family Summary
+            const familyMembers = Storage.getFamilyMembers() || [];
+            const familySummary = document.getElementById('family-summary');
+            if (familyMembers.length === 0) {
+                familySummary.textContent = "No members";
+            } else {
+                const safeCount = familyMembers.filter(m => m.status === 'safe').length;
+                if (safeCount === familyMembers.length) {
+                    familySummary.textContent = "All safe";
+                } else {
+                    familySummary.textContent = `${safeCount} safe, ${familyMembers.length - safeCount} pending/danger`;
+                }
+            }
+
+            // Update Kit Summary
+            const inventory = Storage.getInventory() || [];
+            const kitSummary = document.getElementById('kit-summary');
+            if (inventory.length === 0) {
+                kitSummary.textContent = "0% Complete";
+            } else {
+                const checkedCount = inventory.filter(i => i.checked).length;
+                const percent = Math.round((checkedCount / inventory.length) * 100);
+                kitSummary.textContent = `${percent}% Complete`;
+            }
+        }
+
         if (!Storage.getUserName()) {
             window.location.href = 'onboarding.html' + window.location.search;
         } else {
@@ -205,6 +233,8 @@
                     console.error('Failed to parse connection data:', e);
                 }
             }
+            
+            updateQuickActions();
         }
 
         // --- 1. Header Date Logic ---
