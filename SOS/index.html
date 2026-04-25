@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emergency Kit</title>
+    <title>SOS Emergency</title>
     
     <!-- Tailwind CSS for M3 Expressive Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,12 +13,24 @@
     
     <style>
         /* Material 3 Expressive Typography */
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
         
         body {
             font-family: 'Outfit', sans-serif;
             background-color: #F0F2F5; /* Surface Container */
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+        }
+
+        .mono-text {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Prevent context menu on long press */
+        .no-select {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         /* Smooth bouncy transitions for M3 expressive feel */
@@ -26,10 +38,10 @@
             transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
         }
         .m3-card:active {
-            transform: scale(0.97);
+            transform: scale(0.96);
         }
 
-        /* Animations */
+        /* Floating panel animation */
         @keyframes floatUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -39,157 +51,117 @@
             opacity: 0;
         }
 
-        /* Item Transitions */
-        .kit-item {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .kit-item.checking {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        
-        /* Custom Checkbox Styling */
-        .m3-checkbox {
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border: 2px solid #CBD5E1;
-            border-radius: 8px; /* Slightly rounded, not full circle */
-            outline: none;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-        .m3-checkbox:checked {
-            background-color: #2563EB;
-            border-color: #2563EB;
-        }
-        .m3-checkbox:checked::after {
-            content: '';
-            position: absolute;
-            top: 4px;
-            left: 8px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
+        /* Circular Progress Animation */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.1s linear;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
         }
 
-        /* AI Loading Skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        /* Pulse animation for activated state */
+        @keyframes extremePulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            70% { box-shadow: 0 0 0 60px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .sos-active {
+            animation: extremePulse 1.5s infinite;
         }
     </style>
 </head>
 <body class="text-gray-800 antialiased min-h-screen flex justify-center pb-8">
 
-    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative flex flex-col">
+    <!-- Mobile App Container constraint to match Home UI -->
+    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative flex flex-col px-6 py-8 justify-between">
         
         <!-- Header -->
-        <header class="px-6 pt-10 pb-4 flex items-center justify-between z-10 sticky top-0 bg-[#F4F5F9]/90 backdrop-blur-md">
-            <div class="flex items-center gap-4">
-                <a href="../index.html" class="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm m3-card text-decoration-none">
-                    <span class="material-symbols-rounded text-gray-700">arrow_back</span>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Emergency Kit</h1>
-                    <p class="text-sm font-medium text-blue-600" id="progress-text">60% Complete</p>
-                </div>
-            </div>
-            <div class="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                <span class="material-symbols-rounded">medical_services</span>
+        <header class="flex justify-between items-center z-10 animate-float-up">
+            <a href="javascript:history.back()" class="h-12 w-12 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] m3-card text-decoration-none">
+                <span class="material-symbols-rounded text-gray-700">arrow_back</span>
+            </a>
+            <div class="px-4 py-2 rounded-full bg-red-100 border border-red-200/60 flex items-center gap-2 shadow-sm">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+                </span>
+                <span class="text-xs font-bold text-red-800 uppercase tracking-widest">Emergency Mode</span>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <div class="px-6 pb-24 flex-1 flex flex-col gap-6">
+        <!-- Main SOS Interaction Area -->
+        <section class="flex-1 flex flex-col items-center justify-center w-full mt-4">
+            
+            <!-- Hold to Activate Button -->
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center no-select animate-float-up" style="animation-delay: 0.1s;" id="sos-trigger-area">
+                
+                <!-- Background track (Light Red) -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="46" fill="transparent" stroke="#fee2e2" stroke-width="4"></circle>
+                </svg>
+                
+                <!-- Progress ring (Vibrant Red) -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100">
+                    <circle id="progress-ring" class="progress-ring__circle" cx="50" cy="50" r="46" fill="transparent" stroke="#dc2626" stroke-width="6" stroke-linecap="round" stroke-dasharray="289.02" stroke-dashoffset="289.02"></circle>
+                </svg>
 
-            <!-- Progress Bar -->
-            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden animate-float-up" style="animation-delay: 0.1s;">
-                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500 ease-out w-[60%]"></div>
-            </div>
-
-            <!-- Add Item Input -->
-            <div class="relative animate-float-up" style="animation-delay: 0.2s;">
-                <input type="text" id="new-item-input" placeholder="Add an item..." class="w-full bg-white border border-gray-200 rounded-full py-3.5 pl-5 pr-12 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] font-medium text-gray-800 placeholder-gray-400">
-                <button onclick="addNewItem()" class="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors m3-card">
-                    <span class="material-symbols-rounded text-[20px]">add</span>
+                <!-- Actual Button -->
+                <button id="sos-btn" class="w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-red-600 border-4 border-red-500 flex flex-col items-center justify-center z-20 transition-all duration-300 outline-none shadow-[0_12px_40px_rgba(220,38,38,0.3)] hover:bg-red-500 m3-card">
+                    <span id="sos-icon" class="material-symbols-rounded text-6xl text-white mb-2 transition-colors">emergency</span>
+                    <h2 id="sos-text" class="text-4xl font-black tracking-widest text-white uppercase transition-colors">SOS</h2>
+                    <p id="sos-subtext" class="text-xs text-red-100 font-bold tracking-widest uppercase mt-2">Hold 3 Seconds</p>
                 </button>
-            </div>
-
-            <!-- Inventory List -->
-            <div class="bg-white border border-gray-100 rounded-[28px] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.04)] animate-float-up" style="animation-delay: 0.3s;">
-                <!-- Unchecked Items -->
-                <div id="unchecked-list" class="flex flex-col">
-                    <!-- Populated by JS -->
-                </div>
-                
-                <!-- Divider for checked items -->
-                <div id="checked-divider" class="h-px bg-gray-100 mx-4 my-2 hidden"></div>
-
-                <!-- Checked Items (Drop to bottom) -->
-                <div id="checked-list" class="flex flex-col opacity-60">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- AI Contextual Engine Trigger -->
-            <button id="assess-btn" onclick="triggerAIAssessment()" class="mt-2 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[28px] py-4 px-6 flex items-center justify-between shadow-[0_8px_24px_rgba(99,102,241,0.3)] m3-card animate-float-up relative overflow-hidden group" style="animation-delay: 0.4s;">
-                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
-                <div class="flex items-center gap-3 relative z-10">
-                    <span class="material-symbols-rounded text-indigo-100">psychology</span>
-                    <span class="font-bold text-lg tracking-wide">Assess Needs with AI</span>
-                </div>
-                <span class="material-symbols-rounded text-indigo-200 relative z-10">arrow_forward</span>
-            </button>
-
-            <!-- Dynamic AI Output (Hidden initially) -->
-            <div id="ai-output" class="hidden flex-col gap-5 animate-float-up">
-                
-                <!-- AI Status / Threat Level -->
-                <div class="bg-indigo-50 border border-indigo-100 rounded-[24px] p-5 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-symbols-rounded text-[18px] text-indigo-600">radar</span>
-                        <h4 class="text-xs text-indigo-800 font-bold uppercase tracking-wider">Local Threat Intel</h4>
-                    </div>
-                    <p id="threat-text" class="text-sm font-medium text-indigo-900/80 leading-snug">
-                        Analyzing local weather patterns and cross-referencing your inventory...
-                    </p>
-                </div>
-
-                <!-- Missing Items Priorities -->
-                <div>
-                    <h3 class="text-sm font-bold text-gray-800 mb-3 px-1">Prioritized Additions</h3>
-                    <div id="missing-items-container" class="flex flex-col gap-2">
-                        <!-- Skeletons or Content -->
-                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
-                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
-                    </div>
-                </div>
-
-                <!-- Contingency Plan Timeline -->
-                <div>
-                    <h3 class="text-sm font-bold text-gray-800 mb-4 px-1 mt-2">Action Timeline</h3>
-                    <div class="relative pl-6 border-l-2 border-gray-200 ml-3 flex flex-col gap-6" id="timeline-container">
-                        <!-- Skeletons or Content -->
-                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
-                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
-                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton"></div>
-                    </div>
-                </div>
 
             </div>
 
-        </div>
+            <!-- Live Telemetry Card -->
+            <div class="mt-10 bg-white border border-gray-100 rounded-[28px] p-5 w-full text-center shadow-[0_8px_24px_rgba(0,0,0,0.04)] no-select m3-card animate-float-up" style="animation-delay: 0.2s;">
+                <div class="flex items-center justify-center gap-2 mb-3">
+                    <div class="p-1.5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-rounded text-[18px]">my_location</span>
+                    </div>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-widest">Live Telemetry</span>
+                </div>
+                <div class="mono-text text-xl text-gray-800 leading-tight font-bold">
+                    <p>LAT: <span id="telemetry-lat" class="text-blue-600">WAITING...</span></p>
+                    <p>LON: <span id="telemetry-lon" class="text-blue-600">WAITING...</span></p>
+                    <p class="text-sm text-gray-500 mt-2 font-normal">ACC: &plusmn;<span id="telemetry-acc">--</span>m</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Action Area -->
+        <section class="w-full flex flex-col gap-4 mt-8 z-10 animate-float-up" style="animation-delay: 0.3s;">
+            
+            <!-- Action Row -->
+            <div class="flex gap-4 w-full">
+                <a href="tel:112" class="flex-1 bg-white text-gray-900 border border-gray-200 rounded-[28px] py-4 flex flex-col items-center justify-center gap-1 font-bold text-base text-decoration-none shadow-[0_4px_16px_rgba(0,0,0,0.04)] m3-card">
+                    <div class="bg-red-50 text-red-500 p-2 rounded-full mb-1">
+                        <span class="material-symbols-rounded text-[24px]">call</span>
+                    </div>
+                    Call 112
+                </a>
+                <a id="whatsapp-btn" href="#" target="_blank" class="flex-1 bg-[#25D366] text-white rounded-[28px] py-4 flex flex-col items-center justify-center gap-1 font-bold text-base text-decoration-none opacity-50 pointer-events-none shadow-[0_8px_24px_rgba(37,211,102,0.3)] m3-card">
+                    <div class="bg-white/20 p-2 rounded-full mb-1">
+                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2400/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                    </div>
+                    Notify Family
+                </a>
+            </div>
+
+            <!-- AI Context Card -->
+            <div class="bg-indigo-50 border border-indigo-100 rounded-[28px] p-5 w-full relative overflow-hidden shadow-[0_4px_16px_rgba(79,70,229,0.05)] m3-card">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-rounded text-[20px] text-indigo-600">smart_toy</span>
+                    <h4 class="text-xs text-indigo-800 font-bold uppercase tracking-wider">AI Context Sync</h4>
+                </div>
+                <p id="ai-assessment" class="text-sm text-indigo-900/80 leading-relaxed font-medium">
+                    Establishing connection and analyzing local environmental telemetry...
+                </p>
+            </div>
+
+        </section>
+
     </main>
 
     <script src="../js/storage.js"></script>
@@ -199,215 +171,225 @@
             window.location.href = '../onboarding.html';
         }
 
-        // --- 1. Inventory State & Rendering Logic ---
-        let inventory = Storage.getInventory();
+        // --- 1. Audio API For Real Siren ---
+        let audioCtx;
+        let sirenOscillator;
+        let sirenInterval;
 
-        const uncheckedList = document.getElementById('unchecked-list');
-        const checkedList = document.getElementById('checked-list');
-        const checkedDivider = document.getElementById('checked-divider');
-        const progressText = document.getElementById('progress-text');
-        const progressBar = document.getElementById('progress-bar');
-        const inputField = document.getElementById('new-item-input');
-
-        function renderInventory() {
-            uncheckedList.innerHTML = '';
-            checkedList.innerHTML = '';
-            
-            let checkedCount = 0;
-
-            inventory.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = `kit-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors`;
-                itemDiv.innerHTML = `
-                    <input type="checkbox" class="m3-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.parentElement)">
-                    <span class="text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-gray-800'} transition-all">${item.text}</span>
-                `;
-
-                if (item.checked) {
-                    checkedList.appendChild(itemDiv);
-                    checkedCount++;
-                } else {
-                    uncheckedList.appendChild(itemDiv);
-                }
-            });
-
-            // Update Progress
-            const total = inventory.length;
-            const percent = total === 0 ? 0 : Math.round((checkedCount / total) * 100);
-            progressText.textContent = `${percent}% Complete`;
-            progressBar.style.width = `${percent}%`;
-
-            // Toggle Divider
-            if (checkedCount > 0 && checkedCount < total) {
-                checkedDivider.classList.remove('hidden');
-            } else {
-                checkedDivider.classList.add('hidden');
-            }
-        }
-
-        function toggleItem(id, element) {
-            // Add checking animation class
-            element.classList.add('checking');
-            
-            // Wait for animation to finish before moving DOM elements
-            setTimeout(() => {
-                const item = inventory.find(i => i.id === id);
-                if (item) item.checked = !item.checked;
-                Storage.setInventory(inventory);
-                renderInventory();
-            }, 300); // 300ms matches the CSS transition time
-        }
-
-        function addNewItem() {
-            const text = inputField.value.trim();
-            if (text === '') return;
-            
-            const newItem = {
-                id: Date.now(),
-                text: text,
-                checked: false
-            };
-            
-            inventory.push(newItem);
-            Storage.setInventory(inventory);
-            inputField.value = '';
-            renderInventory();
-        }
-
-        // Allow pressing Enter to add item
-        inputField.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                addNewItem();
-            }
-        });
-
-        // Initial Render
-        renderInventory();
-
-
-        // --- 2. AI Contextual Engine & Dynamic Output ---
-        const aiOutputSection = document.getElementById('ai-output');
-        const assessBtn = document.getElementById('assess-btn');
-        const threatText = document.getElementById('threat-text');
-        const missingItemsContainer = document.getElementById('missing-items-container');
-        const timelineContainer = document.getElementById('timeline-container');
-
-        async function triggerAIAssessment() {
-            // UI State change
-            assessBtn.classList.add('hidden');
-            aiOutputSection.classList.remove('hidden');
-            aiOutputSection.classList.add('flex');
-            
-            // Fetch real location & weather for context
-            let lat = 28.6139, lng = 77.2090; // Default Delhi
+        function startAudibleSiren() {
             try {
-                if ("geolocation" in navigator) {
-                    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
-                    lat = pos.coords.latitude;
-                    lng = pos.coords.longitude;
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 }
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
-                const data = await res.json();
-                generateAIResponse(data.current_weather.weathercode, data.current_weather.temperature);
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
+                sirenOscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                sirenOscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                sirenOscillator.type = 'square';
+                gainNode.gain.value = 0.5; // Volume control
+                sirenOscillator.start();
+
+                // Alternate frequency to sound like an alarm
+                let isHighPitch = false;
+                sirenInterval = setInterval(() => {
+                    isHighPitch = !isHighPitch;
+                    sirenOscillator.frequency.setValueAtTime(isHighPitch ? 800 : 400, audioCtx.currentTime);
+                }, 400);
+
             } catch (e) {
-                console.log("Weather fetch failed, using default generation");
-                generateAIResponse(0, 25); // Default to clear weather
+                console.error("Web Audio API not supported in this browser.", e);
             }
         }
 
-        function generateAIResponse(weatherCode, temp) {
-            // Simulate AI Processing delay
-            setTimeout(() => {
-                // Determine Threat based on Open-Meteo WMO code
-                let threat = "Normal conditions.";
-                let missingRecommendations = [];
-                let timeline = [];
+        // --- 2. Circular Progress & Hold-to-Activate Logic ---
+        const btn = document.getElementById('sos-btn');
+        const triggerArea = document.getElementById('sos-trigger-area');
+        const progressRing = document.getElementById('progress-ring');
+        const circumference = 2 * Math.PI * 46; // r=46
+        
+        let holdTimer;
+        let progressInterval;
+        let progress = 0;
+        let isActivated = false;
+        
+        const HOLD_DURATION = 3000; // 3 seconds
+        const UPDATE_INTERVAL = 50; // Update UI every 50ms
 
-                const hasFlashlight = inventory.some(i => i.text.toLowerCase().includes('flash') && i.checked);
-                const hasPowerBank = inventory.some(i => i.text.toLowerCase().includes('power') && i.checked);
+        // Initialize ring
+        progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressRing.style.strokeDashoffset = circumference;
 
-                if (weatherCode >= 51 && weatherCode <= 67) {
-                    threat = "High probability of continuous rainfall. Risk of localized urban flooding and power outages.";
-                    missingRecommendations = [
-                        { icon: "water_drop", title: "Waterproofing", desc: "Add dry bags or ziplocks for electronics." },
-                        { icon: "umbrella", title: "Rain Gear", desc: "Add ponchos and waterproof boots." }
-                    ];
-                    timeline = [
-                        "Step 1: Secure all physical documents in waterproof sleeves immediately.",
-                        "Step 2: Move ground-floor valuables to higher shelves.",
-                        "Step 3: Monitor municipal water-logging alerts via local radio."
-                    ];
-                } else if (weatherCode >= 95) {
-                    threat = "Severe thunderstorm detected. High risk of lightning and sudden flash floods.";
-                    missingRecommendations = [
-                        { icon: "flash_on", title: "Surge Protectors", desc: "Unplug sensitive electronics now." }
-                    ];
-                    if(!hasFlashlight) missingRecommendations.push({ icon: "highlight", title: "High-Lumen Flashlight", desc: "Critical due to imminent power failure risk."});
-                    timeline = [
-                        "Step 1: Unplug non-essential electronics to prevent surge damage.",
-                        "Step 2: Stay away from windows and plumbing fixtures.",
-                        "Step 3: Keep your Emergency Kit within arm's reach in a central interior room."
-                    ];
-                } else if (temp > 38) {
-                    threat = `Extreme Heatwave detected (${temp}°C). Risk of dehydration and heatstroke.`;
-                    missingRecommendations = [
-                        { icon: "local_drink", title: "Electrolytes", desc: "Add ORS packets to your First Aid Kit." },
-                        { icon: "ac_unit", title: "Cooling Towels", desc: "Add evaporative cooling towels." }
-                    ];
-                    timeline = [
-                        "Step 1: Pre-hydrate by drinking 500ml of water now.",
-                        "Step 2: Draw curtains to block direct sunlight.",
-                        "Step 3: Identify the coolest room in the house for resting."
-                    ];
-                } else {
-                    threat = "Conditions are stable. Good time to perform routine kit maintenance.";
-                    missingRecommendations = [
-                        { icon: "inventory", title: "Check Expirations", desc: "Verify dates on all food and medications." }
-                    ];
-                    if(!hasPowerBank) missingRecommendations.push({ icon: "battery_charging_full", title: "Power Bank", desc: "Essential for standard preparedness."});
-                    timeline = [
-                        "Step 1: Review evacuation routes with family members.",
-                        "Step 2: Update emergency contact numbers in your phone.",
-                        "Step 3: Test your flashlight batteries."
-                    ];
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            progressRing.style.strokeDashoffset = offset;
+        }
+
+        function triggerSOS() {
+            if(isActivated) return;
+            isActivated = true;
+            
+            // UI Changes for Activated State
+            btn.classList.add('sos-active');
+            btn.classList.replace('bg-red-600', 'bg-red-500');
+            btn.classList.replace('border-red-500', 'border-red-400');
+            
+            const subtext = document.getElementById('sos-subtext');
+            subtext.textContent = "SIGNAL ACTIVE";
+            subtext.classList.replace('text-red-100', 'text-white');
+            
+            // Lock progress ring to full
+            setProgress(100);
+
+            // Vibrate if supported
+            if(navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 1000]);
+
+            // Trigger the audible alarm
+            startAudibleSiren();
+            
+            // Emphasize the WhatsApp link to prompt the user
+            document.getElementById('whatsapp-btn').classList.add('animate-pulse');
+        }
+
+        function startHold(e) {
+            if(isActivated) return;
+            // Prevent default touch behaviors (like text selection or magnifying glass)
+            if (e.cancelable) e.preventDefault(); 
+            
+            // Disable the bounce effect while pressing to keep the ring aligned
+            btn.classList.remove('m3-card');
+            btn.style.transform = "scale(0.96)";
+            
+            progress = 0;
+            const increment = (100 / (HOLD_DURATION / UPDATE_INTERVAL));
+
+            progressInterval = setInterval(() => {
+                progress += increment;
+                setProgress(progress);
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    triggerSOS();
+                }
+            }, UPDATE_INTERVAL);
+        }
+
+        function endHold(e) {
+            if(isActivated) return;
+            if (e.cancelable) e.preventDefault();
+            
+            clearInterval(progressInterval);
+            progress = 0;
+            setProgress(0);
+            
+            // Restore bounce effect
+            btn.classList.add('m3-card');
+            btn.style.transform = "none";
+        }
+
+        // Attach events
+        triggerArea.addEventListener('mousedown', startHold);
+        triggerArea.addEventListener('touchstart', startHold, {passive: false});
+        
+        window.addEventListener('mouseup', endHold);
+        window.addEventListener('touchend', endHold);
+        triggerArea.addEventListener('mouseleave', endHold);
+
+        // Prevent context menu
+        triggerArea.addEventListener('contextmenu', e => e.preventDefault());
+
+
+        // --- 3. Live Telemetry & AI Context Logic ---
+        const latEl = document.getElementById('telemetry-lat');
+        const lonEl = document.getElementById('telemetry-lon');
+        const accEl = document.getElementById('telemetry-acc');
+        const waBtn = document.getElementById('whatsapp-btn');
+        const aiAssessment = document.getElementById('ai-assessment');
+        
+        let currentDisasterType = "Unknown Emergency";
+
+        // Fetch local weather to inform AI context
+        async function fetchEnvironmentalRisk(lat, lng) {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=precipitation_probability`);
+                const data = await res.json();
+                const code = data.current_weather.weathercode;
+                
+                let riskText = "Standard environment conditions detected. Awaiting manual user distress input.";
+                currentDisasterType = "General Emergency";
+
+                if (code >= 51 && code <= 67) {
+                    riskText = "Continuous rainfall detected. Potential risk of localized waterlogging or traffic disruption.";
+                    currentDisasterType = "Heavy Rain / Flooding";
+                } else if (code >= 95) {
+                    riskText = "Severe thunderstorm activity in immediate vicinity. High risk of lightning and flash floods.";
+                    currentDisasterType = "Severe Weather / Storm";
+                } else if (data.current_weather.temperature > 40) {
+                    riskText = "Extreme heat anomaly detected. High risk of heatstroke and dehydration.";
+                    currentDisasterType = "Extreme Heatwave";
                 }
 
-                // Render Results
-                threatText.innerHTML = `<span class="font-bold text-indigo-700">Analysis:</span> ${threat}`;
+                aiAssessment.innerHTML = `<span class="text-indigo-800 font-bold">Analysis Complete:</span> ${riskText}`;
                 
-                // Render Missing Items
-                missingItemsContainer.innerHTML = '';
-                missingRecommendations.forEach(item => {
-                    missingItemsContainer.innerHTML += `
-                        <div class="bg-white border border-red-100 rounded-2xl p-3 flex items-center gap-3 shadow-sm m3-card cursor-pointer" onclick="document.getElementById('new-item-input').value='${item.title}'; addNewItem();">
-                            <div class="p-2 bg-red-50 text-red-500 rounded-xl">
-                                <span class="material-symbols-rounded text-[20px]">${item.icon}</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-gray-900 leading-tight">${item.title}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
-                            </div>
-                            <span class="material-symbols-rounded text-gray-300">add_circle</span>
-                        </div>
-                    `;
-                });
-
-                // Render Timeline
-                timelineContainer.innerHTML = '';
-                timeline.forEach((step, index) => {
-                    const isLast = index === timeline.length - 1;
-                    timelineContainer.innerHTML += `
-                        <div class="relative">
-                            <!-- Timeline Dot -->
-                            <div class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-sm"></div>
-                            <p class="text-sm font-bold text-gray-800">${step.split(':')[0]}</p>
-                            <p class="text-sm text-gray-600 mt-1 leading-snug">${step.split(':')[1].trim()}</p>
-                        </div>
-                    `;
-                });
-
-            }, 1800); // 1.8s delay to simulate AI processing
+                // Refresh link to include new AI context
+                updateWhatsAppLink(lat, lng);
+                
+            } catch(e) {
+                aiAssessment.textContent = "Unable to fetch environmental data. Relying on GPS telemetry only.";
+            }
         }
+
+        function updateWhatsAppLink(lat, lon) {
+            const mapsLink = `https://maps.google.com/?q=${lat},${lon}`;
+            const message = `EMERGENCY: I need help. My exact location is ${mapsLink}\n\nLat: ${lat}\nLon: ${lon}\n\nAutomated AI Context: ${currentDisasterType} detected in area.`;
+
+            const members = Storage.getFamilyMembers();
+            // Find first member that isn't the main user and has a phone number
+            const contact = members.find(m => m.id !== 'user_self' && m.phone) || members[1];
+            const phone = contact ? contact.phone.replace(/[^0-9]/g, '') : '';
+
+            waBtn.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            
+            // Enable button once location is locked
+            waBtn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        if ("geolocation" in navigator) {
+            // Use watchPosition for LIVE telemetry updates
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lon = position.coords.longitude.toFixed(6);
+                    const acc = Math.round(position.coords.accuracy);
+
+                    latEl.textContent = lat;
+                    lonEl.textContent = lon;
+                    accEl.textContent = acc;
+
+                    // Update link dynamically as user moves
+                    updateWhatsAppLink(lat, lon);
+                    
+                    // Fetch risk once on first lock
+                    if(aiAssessment.textContent.includes("Establishing")) {
+                        fetchEnvironmentalRisk(lat, lon);
+                    }
+                },
+                (error) => {
+                    latEl.textContent = "ERROR";
+                    lonEl.textContent = "ERROR";
+                    accEl.textContent = "N/A";
+                    aiAssessment.textContent = "GPS Access Denied. Cannot generate precise location telemetry. Please enable location services.";
+                },
+                { enableHighAccuracy: true, maximumAge: 0 }
+            );
+        } else {
+            aiAssessment.textContent = "Geolocation is not supported by this device.";
+        }
+
     </script>
 </body>
 </html>
