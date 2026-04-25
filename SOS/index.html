@@ -3,512 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOS Emergency</title>
+    <title>Emergency Kit</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS for M3 Expressive Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Material Symbols -->
+    <!-- Material Symbols (Rounded) -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap');
+        /* Material 3 Expressive Typography */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #111827; /* Dark mode by default for high contrast */
-            color: white;
+            background-color: #F0F2F5; /* Surface Container */
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none; 
-            touch-action: pan-x pan-y; /* Prevent zooming */
         }
 
-        .mono-text {
-            font-family: 'JetBrains Mono', monospace;
+        /* Smooth bouncy transitions for M3 expressive feel */
+        .m3-card {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease;
+        }
+        .m3-card:active {
+            transform: scale(0.97);
         }
 
-        .no-select {
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
+        /* Animations */
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Standby Ring Animation */
-        .progress-ring__circle {
-            transition: stroke-dashoffset 0.1s linear;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
-
-        /* Active State Pulses */
-        @keyframes severePulse {
-            0% { background-color: #dc2626; } /* Red-600 */
-            50% { background-color: #7f1d1d; } /* Red-900 */
-            100% { background-color: #dc2626; }
-        }
-        .bg-severe-pulse {
-            animation: severePulse 1s infinite;
-        }
-
-        @keyframes alertFlash {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
-        }
-        .animate-alert {
-            animation: alertFlash 1s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Screen Transitions */
-        .screen-enter {
+        .animate-float-up {
+            animation: floatUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .screen-enter-active {
-            opacity: 1;
-            transform: translateY(0);
         }
 
-        /* Disarm Button Fill */
-        .disarm-fill {
-            transition: width 0.1s linear;
+        /* Item Transitions */
+        .kit-item {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kit-item.checking {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        /* Custom Checkbox Styling */
+        .m3-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #CBD5E1;
+            border-radius: 8px; /* Slightly rounded, not full circle */
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .m3-checkbox:checked {
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+        .m3-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* AI Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 </head>
-<body class="antialiased min-h-screen flex justify-center overflow-hidden">
+<body class="text-gray-800 antialiased min-h-screen flex justify-center pb-8">
 
-    <!-- Container -->
-    <main class="w-full max-w-md min-h-screen relative flex flex-col shadow-2xl">
+    <main class="w-full max-w-md bg-[#F4F5F9] min-h-screen shadow-2xl overflow-x-hidden relative flex flex-col">
         
-        <!-- ========================================== -->
-        <!-- SCREEN 1: STANDBY MODE                     -->
-        <!-- ========================================== -->
-        <div id="standby-screen" class="absolute inset-0 flex flex-col px-6 py-8 justify-between bg-[#F4F5F9] text-gray-900 z-10 transition-opacity duration-300">
-            
-            <!-- Header -->
-            <header class="flex justify-between items-center z-10">
-                <a href="javascript:history.back()" class="h-12 w-12 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm active:scale-95 transition-transform">
+        <!-- Header -->
+        <header class="px-6 pt-10 pb-4 flex items-center justify-between z-10 sticky top-0 bg-[#F4F5F9]/90 backdrop-blur-md">
+            <div class="flex items-center gap-4">
+                <a href="../index.html" class="h-10 w-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm m3-card text-decoration-none">
                     <span class="material-symbols-rounded text-gray-700">arrow_back</span>
                 </a>
-                <div class="px-4 py-2 rounded-full bg-red-100 border border-red-200/60 flex items-center gap-2 shadow-sm">
-                    <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
-                    </span>
-                    <span class="text-xs font-bold text-red-800 uppercase tracking-widest">Emergency</span>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Emergency Kit</h1>
+                    <p class="text-sm font-medium text-blue-600" id="progress-text">60% Complete</p>
                 </div>
-            </header>
+            </div>
+            <div class="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-rounded">medical_services</span>
+            </div>
+        </header>
 
-            <!-- Main SOS Button Area -->
-            <section class="flex-1 flex flex-col items-center justify-center w-full mt-4">
-                <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center no-select" id="sos-trigger-area">
-                    
-                    <!-- Background track -->
-                    <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="46" fill="transparent" stroke="#fee2e2" stroke-width="4"></circle>
-                    </svg>
-                    
-                    <!-- Progress ring -->
-                    <svg class="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100">
-                        <circle id="progress-ring" class="progress-ring__circle" cx="50" cy="50" r="46" fill="transparent" stroke="#dc2626" stroke-width="6" stroke-linecap="round" stroke-dasharray="289.02" stroke-dashoffset="289.02"></circle>
-                    </svg>
+        <!-- Main Content Area -->
+        <div class="px-6 pb-24 flex-1 flex flex-col gap-6">
 
-                    <!-- Actual Button -->
-                    <button id="sos-btn" class="w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-red-600 border-4 border-red-500 flex flex-col items-center justify-center z-20 outline-none shadow-[0_12px_40px_rgba(220,38,38,0.3)] active:scale-95 transition-transform duration-200">
-                        <span class="material-symbols-rounded text-6xl text-white mb-2">emergency</span>
-                        <h2 class="text-5xl font-black tracking-widest text-white uppercase">SOS</h2>
-                        <p class="text-xs text-red-100 font-bold tracking-widest uppercase mt-3 bg-black/20 px-3 py-1 rounded-full">Hold 3 Seconds</p>
-                    </button>
-                </div>
-
-                <!-- Live Telemetry Card -->
-                <div class="mt-10 bg-white border border-gray-200 rounded-[24px] p-5 w-full text-center shadow-sm no-select">
-                    <div class="flex items-center justify-center gap-2 mb-3">
-                        <span class="material-symbols-rounded text-[18px] text-blue-600">my_location</span>
-                        <span class="text-xs text-gray-500 font-bold uppercase tracking-widest">Live Telemetry</span>
-                    </div>
-                    <div class="mono-text text-xl text-gray-900 leading-tight font-bold flex flex-col gap-1">
-                        <p>LAT: <span id="telemetry-lat" class="text-blue-600">ACQUIRING...</span></p>
-                        <p>LON: <span id="telemetry-lon" class="text-blue-600">ACQUIRING...</span></p>
-                        <p class="text-sm text-gray-500 mt-1 font-normal">ACCURACY: &plusmn;<span id="telemetry-acc">--</span>m</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Bottom Action Area -->
-            <section class="w-full flex flex-col gap-3 mt-6 z-10">
-                <div class="flex gap-3 w-full">
-                    <a href="tel:112" class="flex-1 bg-white text-gray-900 border border-gray-200 rounded-2xl py-3 flex items-center justify-center gap-2 font-bold text-base shadow-sm active:bg-gray-50">
-                        <span class="material-symbols-rounded text-red-600">call</span> Call 112
-                    </a>
-                    <a id="whatsapp-btn" href="#" target="_blank" class="flex-1 bg-[#25D366] text-white rounded-2xl py-3 flex items-center justify-center gap-2 font-bold text-base shadow-sm opacity-50 pointer-events-none active:bg-[#20bd5a]">
-                        <span class="material-symbols-rounded text-white">chat</span> Msg Family
-                    </a>
-                </div>
-                <!-- AI Context snippet -->
-                <div class="text-center">
-                    <p id="ai-assessment" class="text-[11px] text-gray-500 font-medium px-4">Gathering environmental risk data...</p>
-                </div>
-            </section>
-        </div>
-
-
-        <!-- ========================================== -->
-        <!-- SCREEN 2: ACTIVE DISTRESS MODE             -->
-        <!-- ========================================== -->
-        <div id="active-screen" class="absolute inset-0 bg-severe-pulse flex flex-col px-6 py-10 justify-between z-50 pointer-events-none opacity-0 transition-opacity duration-300">
-            
-            <div class="text-center mt-8 animate-alert">
-                <span class="material-symbols-rounded text-7xl text-white mb-2">warning</span>
-                <h1 class="text-4xl font-black tracking-widest uppercase text-white leading-none">DISTRESS<br>SIGNAL<br>ACTIVE</h1>
+            <!-- Progress Bar -->
+            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden animate-float-up" style="animation-delay: 0.1s;">
+                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500 ease-out w-[60%]"></div>
             </div>
 
-            <div class="bg-black/40 backdrop-blur-md rounded-[24px] p-6 border border-white/20 text-center">
-                <h3 id="dispatch-status" class="text-red-300 font-bold uppercase tracking-widest text-sm mb-4">Notifying Contacts In</h3>
-                <div id="countdown-display" class="text-7xl font-black mono-text text-white mb-4">
-                    10
-                </div>
-                <div class="w-full bg-black/50 rounded-full h-2 mb-6 overflow-hidden">
-                    <div id="countdown-bar" class="bg-red-500 h-full w-full transition-all duration-1000 ease-linear"></div>
+            <!-- Add Item Input -->
+            <div class="relative animate-float-up" style="animation-delay: 0.2s;">
+                <input type="text" id="new-item-input" placeholder="Add an item..." class="w-full bg-white border border-gray-200 rounded-full py-3.5 pl-5 pr-12 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] font-medium text-gray-800 placeholder-gray-400">
+                <button onclick="addNewItem()" class="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors m3-card">
+                    <span class="material-symbols-rounded text-[20px]">add</span>
+                </button>
+            </div>
+
+            <!-- Inventory List -->
+            <div class="bg-white border border-gray-100 rounded-[28px] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.04)] animate-float-up" style="animation-delay: 0.3s;">
+                <!-- Unchecked Items -->
+                <div id="unchecked-list" class="flex flex-col">
+                    <!-- Populated by JS -->
                 </div>
                 
-                <div class="mono-text text-sm text-gray-300 border-t border-white/10 pt-4 text-left">
-                    <p>BROADCASTING COORDS:</p>
-                    <p class="text-white font-bold text-lg mt-1"><span id="active-lat">--</span>, <span id="active-lon">--</span></p>
+                <!-- Divider for checked items -->
+                <div id="checked-divider" class="h-px bg-gray-100 mx-4 my-2 hidden"></div>
+
+                <!-- Checked Items (Drop to bottom) -->
+                <div id="checked-list" class="flex flex-col opacity-60">
+                    <!-- Populated by JS -->
                 </div>
             </div>
 
-            <!-- Disarm Area -->
-            <div class="w-full">
-                <p class="text-center text-red-200 text-xs font-bold uppercase tracking-widest mb-3">Hold to Cancel Dispatch</p>
-                <div id="disarm-trigger" class="relative w-full h-16 bg-black/50 border border-white/20 rounded-full overflow-hidden flex items-center justify-center no-select pointer-events-auto cursor-pointer">
-                    <div id="disarm-fill" class="absolute left-0 top-0 bottom-0 bg-white w-0 disarm-fill"></div>
-                    <span class="relative z-10 font-bold text-white uppercase tracking-widest text-sm mix-blend-difference">Cancel SOS</span>
+            <!-- AI Contextual Engine Trigger -->
+            <button id="assess-btn" onclick="triggerAIAssessment()" class="mt-2 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-[28px] py-4 px-6 flex items-center justify-between shadow-[0_8px_24px_rgba(99,102,241,0.3)] m3-card animate-float-up relative overflow-hidden group" style="animation-delay: 0.4s;">
+                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="material-symbols-rounded text-indigo-100">psychology</span>
+                    <span class="font-bold text-lg tracking-wide">Assess Needs with AI</span>
                 </div>
+                <span class="material-symbols-rounded text-indigo-200 relative z-10">arrow_forward</span>
+            </button>
+
+            <!-- Dynamic AI Output (Hidden initially) -->
+            <div id="ai-output" class="hidden flex-col gap-5 animate-float-up">
+                
+                <!-- AI Status / Threat Level -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-[24px] p-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-rounded text-[18px] text-indigo-600">radar</span>
+                        <h4 class="text-xs text-indigo-800 font-bold uppercase tracking-wider">Local Threat Intel</h4>
+                    </div>
+                    <p id="threat-text" class="text-sm font-medium text-indigo-900/80 leading-snug">
+                        Analyzing local weather patterns and cross-referencing your inventory...
+                    </p>
+                </div>
+
+                <!-- Missing Items Priorities -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 px-1">Prioritized Additions</h3>
+                    <div id="missing-items-container" class="flex flex-col gap-2">
+                        <!-- Skeletons or Content -->
+                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
+                        <div class="ai-skeleton h-14 w-full rounded-2xl skeleton"></div>
+                    </div>
+                </div>
+
+                <!-- Contingency Plan Timeline -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-4 px-1 mt-2">Action Timeline</h3>
+                    <div class="relative pl-6 border-l-2 border-gray-200 ml-3 flex flex-col gap-6" id="timeline-container">
+                        <!-- Skeletons or Content -->
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton mb-2"></div>
+                        <div class="ai-skeleton h-10 w-full rounded-lg skeleton"></div>
+                    </div>
+                </div>
+
             </div>
-            
+
         </div>
-
     </main>
 
+    <script src="../js/storage.js"></script>
     <script>
-        // --- 0. Fallback Storage Mock (Ensures page runs independently) ---
-        const StorageMock = {
-            getFamilyMembers: () => [
-                { id: 'user_self', name: 'Me' },
-                { id: '1', name: 'Emergency Contact', phone: '112' }
-            ]
-        };
-        const appStorage = (typeof Storage !== 'undefined' && Storage.getFamilyMembers) ? Storage : StorageMock;
+        // --- 0. Auth & Initialization ---
+        if (!Storage.getUserName()) {
+            window.location.href = '../onboarding.html';
+        }
 
-        // --- 1. DOM Elements ---
-        const standbyScreen = document.getElementById('standby-screen');
-        const activeScreen = document.getElementById('active-screen');
-        
-        // Trigger UI
-        const triggerArea = document.getElementById('sos-trigger-area');
-        const btn = document.getElementById('sos-btn');
-        const progressRing = document.getElementById('progress-ring');
-        
-        // Disarm UI
-        const disarmTrigger = document.getElementById('disarm-trigger');
-        const disarmFill = document.getElementById('disarm-fill');
-        
-        // Telemetry UI
-        const latEl = document.getElementById('telemetry-lat');
-        const lonEl = document.getElementById('telemetry-lon');
-        const accEl = document.getElementById('telemetry-acc');
-        const actLatEl = document.getElementById('active-lat');
-        const actLonEl = document.getElementById('active-lon');
-        
-        // Countdown UI
-        const countdownDisplay = document.getElementById('countdown-display');
-        const countdownBar = document.getElementById('countdown-bar');
-        const dispatchStatus = document.getElementById('dispatch-status');
-        
-        // Links
-        const waBtn = document.getElementById('whatsapp-btn');
-        const aiAssessment = document.getElementById('ai-assessment');
+        // --- 1. Inventory State & Rendering Logic ---
+        let inventory = Storage.getInventory();
 
-        // --- 2. State Variables ---
-        const circumference = 2 * Math.PI * 46; 
-        progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
-        progressRing.style.strokeDashoffset = circumference;
+        const uncheckedList = document.getElementById('unchecked-list');
+        const checkedList = document.getElementById('checked-list');
+        const checkedDivider = document.getElementById('checked-divider');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const inputField = document.getElementById('new-item-input');
 
-        let isActivated = false;
-        let holdTimer;
-        let progressInterval;
-        let progress = 0;
-        const HOLD_DURATION = 3000; // 3 seconds to trigger
-        const DISARM_DURATION = 2000; // 2 seconds to disarm
-        const UPDATE_INTERVAL = 50;
+        function renderInventory() {
+            uncheckedList.innerHTML = '';
+            checkedList.innerHTML = '';
+            
+            let checkedCount = 0;
 
-        let countdownValue = 10;
-        let countdownInterval;
-        let isDispatched = false;
+            inventory.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `kit-item flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors`;
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="m3-checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.parentElement)">
+                    <span class="text-sm font-medium ${item.checked ? 'text-gray-400 line-through' : 'text-gray-800'} transition-all">${item.text}</span>
+                `;
 
-        let currentLat = "0.000000";
-        let currentLon = "0.000000";
-        let currentDisasterType = "General Emergency";
+                if (item.checked) {
+                    checkedList.appendChild(itemDiv);
+                    checkedCount++;
+                } else {
+                    uncheckedList.appendChild(itemDiv);
+                }
+            });
 
-        // --- 3. Audio Siren API ---
-        let audioCtx;
-        let sirenOscillator;
-        let sirenInterval;
+            // Update Progress
+            const total = inventory.length;
+            const percent = total === 0 ? 0 : Math.round((checkedCount / total) * 100);
+            progressText.textContent = `${percent}% Complete`;
+            progressBar.style.width = `${percent}%`;
 
-        function startAudibleSiren() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                sirenOscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                sirenOscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                sirenOscillator.type = 'square';
-                gainNode.gain.value = 0.8; // LOUD
-                sirenOscillator.start();
-
-                let isHighPitch = false;
-                sirenInterval = setInterval(() => {
-                    isHighPitch = !isHighPitch;
-                    // High-low European style siren (hi-lo)
-                    sirenOscillator.frequency.setValueAtTime(isHighPitch ? 900 : 700, audioCtx.currentTime);
-                    if(navigator.vibrate) navigator.vibrate(400); // Pulse vibration with siren
-                }, 500);
-            } catch (e) {
-                console.warn("Audio API blocked or unsupported.");
+            // Toggle Divider
+            if (checkedCount > 0 && checkedCount < total) {
+                checkedDivider.classList.remove('hidden');
+            } else {
+                checkedDivider.classList.add('hidden');
             }
         }
 
-        function stopAudibleSiren() {
-            if (sirenOscillator) {
-                sirenOscillator.stop();
-                sirenOscillator.disconnect();
+        function toggleItem(id, element) {
+            // Add checking animation class
+            element.classList.add('checking');
+            
+            // Wait for animation to finish before moving DOM elements
+            setTimeout(() => {
+                const item = inventory.find(i => i.id === id);
+                if (item) item.checked = !item.checked;
+                Storage.setInventory(inventory);
+                renderInventory();
+            }, 300); // 300ms matches the CSS transition time
+        }
+
+        function addNewItem() {
+            const text = inputField.value.trim();
+            if (text === '') return;
+            
+            const newItem = {
+                id: Date.now(),
+                text: text,
+                checked: false
+            };
+            
+            inventory.push(newItem);
+            Storage.setInventory(inventory);
+            inputField.value = '';
+            renderInventory();
+        }
+
+        // Allow pressing Enter to add item
+        inputField.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addNewItem();
             }
-            if (sirenInterval) clearInterval(sirenInterval);
-        }
+        });
 
-        // --- 4. Main Activation Logic ---
-        function setProgress(percent) {
-            const offset = circumference - (percent / 100) * circumference;
-            progressRing.style.strokeDashoffset = offset;
-        }
+        // Initial Render
+        renderInventory();
 
-        function activateEmergencyMode() {
-            if(isActivated) return;
-            isActivated = true;
+
+        // --- 2. AI Contextual Engine & Dynamic Output ---
+        const aiOutputSection = document.getElementById('ai-output');
+        const assessBtn = document.getElementById('assess-btn');
+        const threatText = document.getElementById('threat-text');
+        const missingItemsContainer = document.getElementById('missing-items-container');
+        const timelineContainer = document.getElementById('timeline-container');
+
+        async function triggerAIAssessment() {
+            // UI State change
+            assessBtn.classList.add('hidden');
+            aiOutputSection.classList.remove('hidden');
+            aiOutputSection.classList.add('flex');
             
-            // UI Switch
-            standbyScreen.classList.add('opacity-0', 'pointer-events-none');
-            activeScreen.classList.remove('opacity-0', 'pointer-events-none');
-            activeScreen.classList.add('pointer-events-auto');
-
-            // Copy telemetry to active screen
-            actLatEl.textContent = currentLat;
-            actLonEl.textContent = currentLon;
-
-            startAudibleSiren();
-            startDispatchCountdown();
-        }
-
-        function startDispatchCountdown() {
-            countdownValue = 10;
-            isDispatched = false;
-            countdownDisplay.textContent = countdownValue;
-            countdownBar.style.width = '100%';
-
-            countdownInterval = setInterval(() => {
-                countdownValue--;
-                countdownDisplay.textContent = countdownValue;
-                countdownBar.style.width = `${(countdownValue / 10) * 100}%`;
-
-                if (countdownValue <= 0) {
-                    clearInterval(countdownInterval);
-                    executeDispatch();
-                }
-            }, 1000);
-        }
-
-        function executeDispatch() {
-            isDispatched = true;
-            dispatchStatus.textContent = "CONTACTS & AUTHORITIES NOTIFIED";
-            dispatchStatus.classList.replace('text-red-300', 'text-white');
-            countdownDisplay.innerHTML = '<span class="material-symbols-rounded text-6xl text-green-400">check_circle</span>';
-            countdownBar.parentElement.style.display = 'none';
-            
-            // In a real app, this sends the SMS/API calls to backend
-            console.log("CRITICAL: DISPATCH EXECUTED", {lat: currentLat, lon: currentLon});
-            if(navigator.vibrate) navigator.vibrate([1000, 500, 1000]); // Long sustained vibe
-        }
-
-        function disarmEmergency() {
-            isActivated = false;
-            clearInterval(countdownInterval);
-            stopAudibleSiren();
-            
-            // Reset state
-            dispatchStatus.textContent = "Notifying Contacts In";
-            dispatchStatus.classList.replace('text-white', 'text-red-300');
-            countdownBar.parentElement.style.display = 'block';
-            setProgress(0);
-            
-            // UI Switch back
-            activeScreen.classList.add('opacity-0', 'pointer-events-none');
-            activeScreen.classList.remove('pointer-events-auto');
-            standbyScreen.classList.remove('opacity-0', 'pointer-events-none');
-        }
-
-        // --- 5. Trigger Interactions (Hold to SOS) ---
-        function startHold(e) {
-            if(isActivated) return;
-            if (e.cancelable) e.preventDefault(); 
-            
-            btn.style.transform = "scale(0.92)";
-            progress = 0;
-            const increment = (100 / (HOLD_DURATION / UPDATE_INTERVAL));
-
-            progressInterval = setInterval(() => {
-                progress += increment;
-                setProgress(progress);
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    btn.style.transform = "none";
-                    activateEmergencyMode();
-                }
-            }, UPDATE_INTERVAL);
-        }
-
-        function endHold(e) {
-            if(isActivated) return;
-            if (e.cancelable) e.preventDefault();
-            
-            clearInterval(progressInterval);
-            progress = 0;
-            setProgress(0);
-            btn.style.transform = "none";
-        }
-
-        triggerArea.addEventListener('mousedown', startHold);
-        triggerArea.addEventListener('touchstart', startHold, {passive: false});
-        window.addEventListener('mouseup', endHold);
-        window.addEventListener('touchend', endHold);
-        triggerArea.addEventListener('mouseleave', endHold);
-        triggerArea.addEventListener('contextmenu', e => e.preventDefault());
-
-        // --- 6. Disarm Interactions (Hold to Cancel) ---
-        let disarmProgress = 0;
-        let disarmInterval;
-
-        function startDisarmHold(e) {
-            if(!isActivated || isDispatched) return; // Cannot cancel if already dispatched
-            if (e.cancelable) e.preventDefault();
-
-            disarmProgress = 0;
-            const increment = (100 / (DISARM_DURATION / UPDATE_INTERVAL));
-
-            disarmInterval = setInterval(() => {
-                disarmProgress += increment;
-                disarmFill.style.width = `${disarmProgress}%`;
-                
-                if (disarmProgress >= 100) {
-                    clearInterval(disarmInterval);
-                    disarmFill.style.width = `0%`;
-                    disarmEmergency();
-                }
-            }, UPDATE_INTERVAL);
-        }
-
-        function endDisarmHold(e) {
-            if(!isActivated || isDispatched) return;
-            clearInterval(disarmInterval);
-            disarmProgress = 0;
-            disarmFill.style.width = `0%`;
-        }
-
-        disarmTrigger.addEventListener('mousedown', startDisarmHold);
-        disarmTrigger.addEventListener('touchstart', startDisarmHold, {passive: false});
-        window.addEventListener('mouseup', endDisarmHold);
-        window.addEventListener('touchend', endDisarmHold);
-        disarmTrigger.addEventListener('mouseleave', endDisarmHold);
-        disarmTrigger.addEventListener('contextmenu', e => e.preventDefault());
-
-
-        // --- 7. Live Telemetry & Context ---
-        function updateWhatsAppLink() {
-            const mapsLink = `https://maps.google.com/?q=${currentLat},${currentLon}`;
-            const message = `🚨 EMERGENCY SOS 🚨\nI need immediate assistance. My exact live location is:\n${mapsLink}\n\nCoordinates: ${currentLat}, ${currentLon}\nAI Context: ${currentDisasterType}`;
-
-            const members = appStorage.getFamilyMembers();
-            const contact = members.find(m => m.id !== 'user_self' && m.phone) || members[1];
-            const phone = contact && contact.phone ? contact.phone.replace(/[^0-9]/g, '') : '';
-
-            waBtn.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-            waBtn.classList.remove('opacity-50', 'pointer-events-none');
-        }
-
-        async function fetchEnvironmentalRisk(lat, lng) {
+            // Fetch real location & weather for context
+            let lat = 28.6139, lng = 77.2090; // Default Delhi
             try {
+                if ("geolocation" in navigator) {
+                    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+                    lat = pos.coords.latitude;
+                    lng = pos.coords.longitude;
+                }
                 const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
                 const data = await res.json();
-                const code = data.current_weather.weathercode;
-                
-                let riskText = "Standard environment conditions.";
-                currentDisasterType = "General Emergency";
-
-                if (code >= 51 && code <= 67) {
-                    riskText = "Heavy rainfall detected in area.";
-                    currentDisasterType = "Heavy Rain / Flooding Risk";
-                } else if (code >= 95) {
-                    riskText = "Severe thunderstorm activity in immediate vicinity.";
-                    currentDisasterType = "Severe Weather";
-                }
-
-                aiAssessment.innerHTML = `AI Context: ${riskText}`;
-                updateWhatsAppLink();
-            } catch(e) {
-                aiAssessment.textContent = "AI Context unavailable. Using GPS only.";
+                generateAIResponse(data.current_weather.weathercode, data.current_weather.temperature);
+            } catch (e) {
+                console.log("Weather fetch failed, using default generation");
+                generateAIResponse(0, 25); // Default to clear weather
             }
         }
 
-        // Initialize Geolocation
-        if ("geolocation" in navigator) {
-            navigator.geolocation.watchPosition(
-                (position) => {
-                    currentLat = position.coords.latitude.toFixed(6);
-                    currentLon = position.coords.longitude.toFixed(6);
-                    const acc = Math.round(position.coords.accuracy);
+        function generateAIResponse(weatherCode, temp) {
+            // Simulate AI Processing delay
+            setTimeout(() => {
+                // Determine Threat based on Open-Meteo WMO code
+                let threat = "Normal conditions.";
+                let missingRecommendations = [];
+                let timeline = [];
 
-                    latEl.textContent = currentLat;
-                    lonEl.textContent = currentLon;
-                    accEl.textContent = acc;
-                    
-                    if(isActivated) {
-                        actLatEl.textContent = currentLat;
-                        actLonEl.textContent = currentLon;
-                    }
+                const hasFlashlight = inventory.some(i => i.text.toLowerCase().includes('flash') && i.checked);
+                const hasPowerBank = inventory.some(i => i.text.toLowerCase().includes('power') && i.checked);
 
-                    updateWhatsAppLink();
-                    
-                    // Fetch weather context once
-                    if(aiAssessment.textContent.includes("Gathering")) {
-                        fetchEnvironmentalRisk(currentLat, currentLon);
-                    }
-                },
-                (error) => {
-                    latEl.textContent = "ERROR";
-                    lonEl.textContent = "ERROR";
-                    accEl.textContent = "N/A";
-                    aiAssessment.textContent = "GPS Access Denied. Precise location unavailable.";
-                },
-                { enableHighAccuracy: true, maximumAge: 0 }
-            );
-        } else {
-            aiAssessment.textContent = "Geolocation is not supported by this device.";
+                if (weatherCode >= 51 && weatherCode <= 67) {
+                    threat = "High probability of continuous rainfall. Risk of localized urban flooding and power outages.";
+                    missingRecommendations = [
+                        { icon: "water_drop", title: "Waterproofing", desc: "Add dry bags or ziplocks for electronics." },
+                        { icon: "umbrella", title: "Rain Gear", desc: "Add ponchos and waterproof boots." }
+                    ];
+                    timeline = [
+                        "Step 1: Secure all physical documents in waterproof sleeves immediately.",
+                        "Step 2: Move ground-floor valuables to higher shelves.",
+                        "Step 3: Monitor municipal water-logging alerts via local radio."
+                    ];
+                } else if (weatherCode >= 95) {
+                    threat = "Severe thunderstorm detected. High risk of lightning and sudden flash floods.";
+                    missingRecommendations = [
+                        { icon: "flash_on", title: "Surge Protectors", desc: "Unplug sensitive electronics now." }
+                    ];
+                    if(!hasFlashlight) missingRecommendations.push({ icon: "highlight", title: "High-Lumen Flashlight", desc: "Critical due to imminent power failure risk."});
+                    timeline = [
+                        "Step 1: Unplug non-essential electronics to prevent surge damage.",
+                        "Step 2: Stay away from windows and plumbing fixtures.",
+                        "Step 3: Keep your Emergency Kit within arm's reach in a central interior room."
+                    ];
+                } else if (temp > 38) {
+                    threat = `Extreme Heatwave detected (${temp}°C). Risk of dehydration and heatstroke.`;
+                    missingRecommendations = [
+                        { icon: "local_drink", title: "Electrolytes", desc: "Add ORS packets to your First Aid Kit." },
+                        { icon: "ac_unit", title: "Cooling Towels", desc: "Add evaporative cooling towels." }
+                    ];
+                    timeline = [
+                        "Step 1: Pre-hydrate by drinking 500ml of water now.",
+                        "Step 2: Draw curtains to block direct sunlight.",
+                        "Step 3: Identify the coolest room in the house for resting."
+                    ];
+                } else {
+                    threat = "Conditions are stable. Good time to perform routine kit maintenance.";
+                    missingRecommendations = [
+                        { icon: "inventory", title: "Check Expirations", desc: "Verify dates on all food and medications." }
+                    ];
+                    if(!hasPowerBank) missingRecommendations.push({ icon: "battery_charging_full", title: "Power Bank", desc: "Essential for standard preparedness."});
+                    timeline = [
+                        "Step 1: Review evacuation routes with family members.",
+                        "Step 2: Update emergency contact numbers in your phone.",
+                        "Step 3: Test your flashlight batteries."
+                    ];
+                }
+
+                // Render Results
+                threatText.innerHTML = `<span class="font-bold text-indigo-700">Analysis:</span> ${threat}`;
+                
+                // Render Missing Items
+                missingItemsContainer.innerHTML = '';
+                missingRecommendations.forEach(item => {
+                    missingItemsContainer.innerHTML += `
+                        <div class="bg-white border border-red-100 rounded-2xl p-3 flex items-center gap-3 shadow-sm m3-card cursor-pointer" onclick="document.getElementById('new-item-input').value='${item.title}'; addNewItem();">
+                            <div class="p-2 bg-red-50 text-red-500 rounded-xl">
+                                <span class="material-symbols-rounded text-[20px]">${item.icon}</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-gray-900 leading-tight">${item.title}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
+                            </div>
+                            <span class="material-symbols-rounded text-gray-300">add_circle</span>
+                        </div>
+                    `;
+                });
+
+                // Render Timeline
+                timelineContainer.innerHTML = '';
+                timeline.forEach((step, index) => {
+                    const isLast = index === timeline.length - 1;
+                    timelineContainer.innerHTML += `
+                        <div class="relative">
+                            <!-- Timeline Dot -->
+                            <div class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-sm"></div>
+                            <p class="text-sm font-bold text-gray-800">${step.split(':')[0]}</p>
+                            <p class="text-sm text-gray-600 mt-1 leading-snug">${step.split(':')[1].trim()}</p>
+                        </div>
+                    `;
+                });
+
+            }, 1800); // 1.8s delay to simulate AI processing
         }
-
     </script>
 </body>
 </html>
